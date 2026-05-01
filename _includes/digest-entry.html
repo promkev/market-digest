@@ -1,0 +1,164 @@
+<div class="entry">
+  <div class="entry-header">
+    <span class="entry-time">🕙 {{ include.time }}</span>
+    <span class="entry-meta">{{ include.date | date: "%A, %B %-d, %Y" }}{% if include.trading %} · Trading Hours{% endif %}</span>
+  </div>
+
+  <section>
+    <h2><span class="flag">🇨🇦</span> Canadian Markets</h2>
+    {% for item in include.canadian_markets %}
+    <div class="story">
+      <div class="story-title">
+        <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
+        <span class="source">{{ item.source }}{% if item.date %} · {{ item.date }}{% endif %}</span>
+      </div>
+      <div class="story-summary">{{ item.summary }}</div>
+      <div class="story-meta">
+        {% for tag in item.tags %}<span class="tag">{{ tag }}</span> {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2><span class="flag">🇺🇸</span> US & Global Markets</h2>
+    {% for item in include.us_global_markets %}
+    <div class="story">
+      <div class="story-title">
+        <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
+        <span class="source">{{ item.source }}{% if item.date %} · {{ item.date }}{% endif %}</span>
+      </div>
+      <div class="story-summary">{{ item.summary }}</div>
+      <div class="story-meta">
+        {% for tag in item.tags %}<span class="tag">{{ tag }}</span> {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  {% if include.prediction_markets %}
+  <section>
+    <h2>📊 Prediction Markets</h2>
+    <table>
+      <tr><th>MARKET</th><th>YES%</th><th>NO%</th><th>Δ</th></tr>
+      {% for market in include.prediction_markets %}
+      <tr>
+        <td>{{ market.market }}</td>
+        {% assign yes_dir = "up" %}
+        {% if market.delta contains "-" %}{% assign yes_dir = "down" %}{% endif %}
+        <td class="{{ yes_dir }}">{{ market.yes_pct }}</td>
+        <td>{{ market.no_pct }}</td>
+        <td>{{ market.delta }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </section>
+  {% endif %}
+
+  {% if include.market_snapshot %}
+  <section>
+    <h2>📈 Market Snapshot</h2>
+    <div class="indices">
+      {% for key in (1..20) %}
+        {% unless include.market_snapshot.sp_tsx == nil and include.market_snapshot.sp_500 == nil %}
+        {% endunless %}
+      {% endfor %}
+      {% if include.market_snapshot.sp_tsx %}
+      <div class="index-item">
+        <div class="name">S&P/TSX Composite</div>
+        <div class="price{% if include.market_snapshot.sp_tsx.direction == 'up' %} up{% elsif include.market_snapshot.sp_tsx.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.sp_tsx.value }} {% if include.market_snapshot.sp_tsx.direction == 'up' %}🔺{% elsif include.market_snapshot.sp_tsx.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.sp_tsx.change }}</div>
+      </div>
+      {% endif %}
+      {% if include.market_snapshot.sp_500 %}
+      <div class="index-item">
+        <div class="name">S&P 500</div>
+        <div class="price{% if include.market_snapshot.sp_500.direction == 'up' %} up{% elsif include.market_snapshot.sp_500.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.sp_500.value }} {% if include.market_snapshot.sp_500.direction == 'up' %}🔺{% elsif include.market_snapshot.sp_500.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.sp_500.change }}</div>
+      </div>
+      {% endif %}
+      {% if include.market_snapshot.cad_usd %}
+      <div class="index-item">
+        <div class="name">CAD/USD</div>
+        <div class="price{% if include.market_snapshot.cad_usd.direction == 'up' %} up{% elsif include.market_snapshot.cad_usd.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.cad_usd.value }} {% if include.market_snapshot.cad_usd.direction == 'up' %}🔺{% elsif include.market_snapshot.cad_usd.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.cad_usd.change }}</div>
+      </div>
+      {% endif %}
+      {% if include.market_snapshot.wti_crude %}
+      <div class="index-item">
+        <div class="name">WTI Crude</div>
+        <div class="price{% if include.market_snapshot.wti_crude.direction == 'up' %} up{% elsif include.market_snapshot.wti_crude.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.wti_crude.value }} {% if include.market_snapshot.wti_crude.direction == 'up' %}🔺{% elsif include.market_snapshot.wti_crude.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.wti_crude.change }}</div>
+      </div>
+      {% endif %}
+      {% if include.market_snapshot.ten_year_yield %}
+      <div class="index-item">
+        <div class="name">U.S. 10Y Yield</div>
+        <div class="price{% if include.market_snapshot.ten_year_yield.direction == 'up' %} up{% elsif include.market_snapshot.ten_year_yield.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.ten_year_yield.value }} {% if include.market_snapshot.ten_year_yield.direction == 'up' %}🔺{% elsif include.market_snapshot.ten_year_yield.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.ten_year_yield.change }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if include.analysis %}
+  <section class="analysis-box">
+    <h2>🧠 Analysis</h2>
+    {% if include.analysis.theme %}<div class="analysis-line"><span class="key">Theme:</span> {{ include.analysis.theme }}</div>{% endif %}
+    {% if include.analysis.cad_angle %}<div class="analysis-line"><span class="key">CAD Angle:</span> {{ include.analysis.cad_angle }}</div>{% endif %}
+    {% if include.analysis.risk_factor %}<div class="analysis-line"><span class="key">Risk Factor:</span> {{ include.analysis.risk_factor }}</div>{% endif %}
+    {% if include.analysis.polymarket_signal %}<div class="analysis-line"><span class="key">Polymarket Signal:</span> {{ include.analysis.polymarket_signal }}</div>{% endif %}
+  </section>
+  {% endif %}
+
+  {% if include.scenarios %}
+  <section class="scenario-section">
+    <h2>🎲 What If? — Scenario Map</h2>
+    <div class="scenario-grid">
+
+      {% if include.scenarios.short_term %}
+      <div class="scenario-card short-term">
+        <h3>🟢 Short Term (days–weeks)</h3>
+        {% for s in include.scenarios.short_term %}
+        <div class="scenario-row">
+          <span class="outcome-label">{{ s.label }}</span>
+          <span class="prob{% if s.probability.size > 0 and s.probability | plus: 0 >= 40 %} high{% elsif s.probability.size > 0 and s.probability | plus: 0 >= 20 %} medium{% elsif s.probability.size > 0 %} low{% endif %}">{{ s.probability }}{% if s.delta %} <span class="pos">↑{{ s.delta }}</span>{% endif %}</span>
+        </div>
+        {% if s.impact %}
+        <div class="scenario-impact">{{ s.impact }}</div>
+        {% endif %}
+        {% for sub in s.sub_outcomes %}
+        <div class="scenario-impact" style="padding-left: 1.5rem;">
+          ↳ <strong>{{ sub.label }}</strong> ({{ sub.conditional_prob }}{% if sub.delta %} <span class="pos">↑{{ sub.delta }}</span>{% endif %}): {{ sub.impact }}
+        </div>
+        {% endfor %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if include.scenarios.long_term %}
+      <div class="scenario-card long-term">
+        <h3>🔮 Long Term (months)</h3>
+        {% for s in include.scenarios.long_term %}
+        <div class="scenario-row">
+          <span class="outcome-label">{{ s.label }}</span>
+          <span class="prob{% if s.probability.size > 0 and s.probability | plus: 0 >= 40 %} high{% elsif s.probability.size > 0 and s.probability | plus: 0 >= 20 %} medium{% elsif s.probability.size > 0 %} low{% endif %}">{{ s.probability }}{% if s.delta %} <span class="pos">↑{{ s.delta }}</span>{% endif %}</span>
+        </div>
+        {% if s.impact %}
+        <div class="scenario-impact">{{ s.impact }}</div>
+        {% endif %}
+        {% for sub in s.sub_outcomes %}
+        <div class="scenario-impact" style="padding-left: 1.5rem;">
+          ↳ <strong>{{ sub.label }}</strong> ({{ sub.conditional_prob }}{% if sub.delta %} <span class="pos">↑{{ sub.delta }}</span>{% endif %}): {{ sub.impact }}
+        </div>
+        {% endfor %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if include.scenarios.key_observation %}
+      <div class="scenario-takeaway">
+        <span class="label">📌 Key observation:</span> {{ include.scenarios.key_observation }}
+      </div>
+      {% endif %}
+
+    </div>
+  </section>
+  {% endif %}
+</div>

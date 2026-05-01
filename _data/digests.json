@@ -1,3 +1,279 @@
 {
-  "2026-05-01": []
+  "2026-05-01": [
+    {
+      "time": "3:01 PM EDT",
+      "date": "2026-05-01",
+      "post_market": false,
+      "canadian_markets": [
+        {
+          "title": "Bank of Canada Holds at 2.25%, Warns Oil-Driven Inflation Risks Could Force Future Hikes",
+          "url": "https://www.cbc.ca/news/business/bank-of-canada-interest-rate-april-2026-9.7181093",
+          "source": "CBC News",
+          "date": "April 29, 2026",
+          "summary": "The Bank of Canada held its overnight rate at 2.25% as expected, but Governor Macklem warned that if elevated oil prices persist, the risk of generalized inflation increases — keeping the door open to a rate hike later in 2026. Markets are pricing a 25bp hike by October.",
+          "tags": [
+            "BoC",
+            "Interest Rates",
+            "Inflation",
+            "Oil"
+          ]
+        },
+        {
+          "title": "TSX Slips as Energy Stocks Retreat on Oil Pullback; Imperial Oil, Magna Earnings in Focus",
+          "url": "https://www.bnnbloomberg.ca/business/2026/05/01/sptsx-composite-down-in-late-morning-trading-as-oil-moves-lower/",
+          "source": "BNN Bloomberg / The Canadian Press",
+          "date": "May 1, 2026",
+          "summary": "The S&P/TSX Composite fell ~37 points to 33,927 in late-morning trading, dragged by energy names as WTI crude pulled back ~$3 to $102/bbl. Imperial Oil and Magna International earnings were the session's key corporate focus for Canadian investors.",
+          "tags": [
+            "TSX",
+            "Energy",
+            "Earnings",
+            "Oil"
+          ]
+        },
+        {
+          "title": "Canadian Energy Stocks Surge on Elevated Oil; CNQ Hits Record Production",
+          "url": "https://ca.finance.yahoo.com/news/canadian-stock-could-rule-them-001500375.html",
+          "source": "Yahoo Finance Canada",
+          "date": "May 1, 2026",
+          "summary": "Canadian Natural Resources posted record quarterly production of ~1.66M BoE/d with Oil Sands at 105% utilization. High-yield TSX energy and pipeline names continue to benefit from the oil price environment driven by Middle East disruptions and Strait of Hormuz restrictions.",
+          "tags": [
+            "Energy",
+            "Oil Sands",
+            "Dividends",
+            "CNQ"
+          ]
+        }
+      ],
+      "us_global_markets": [
+        {
+          "title": "S&P 500, Nasdaq Hit Fresh Records as Apple Earnings Beat Fuels Tech Rally",
+          "url": "https://www.fool.com/coverage/stock-market-today/2026/05/01/stock-market-today-may-1-tech-stocks-soar-on-apple-earnings/",
+          "source": "The Motley Fool",
+          "date": "May 1, 2026",
+          "summary": "Apple surged 4%+ after beating Q2 estimates ($2.01 EPS, $111.2B revenue), lifting the S&P 500 +0.64% to 7,255 and Nasdaq +1.07%. April was the best month for both indices since 2020, as AI optimism and strong earnings overpowered Iran conflict fears.",
+          "tags": [
+            "S&P 500",
+            "Nasdaq",
+            "Apple",
+            "Earnings",
+            "Tech"
+          ]
+        },
+        {
+          "title": "Fed Holds Rates at 3.50–3.75% in Powell's Final Meeting; Warsh Confirmation Advances",
+          "url": "https://www.cnn.com/2026/04/29/economy/fed-decision-powell-warsh",
+          "source": "CNN Business",
+          "date": "April 29, 2026",
+          "summary": "The FOMC held the federal funds rate at 3.50–3.75% in what was Jerome Powell's last meeting as chair. Powell announced he will remain on the Board of Governors after May 15. Kevin Warsh's nomination advanced through the Senate Banking Committee, promising 'regime change' at the central bank.",
+          "tags": [
+            "Fed",
+            "FOMC",
+            "Powell",
+            "Warsh",
+            "Interest Rates"
+          ]
+        },
+        {
+          "title": "Oil Pulls Back to ~$102 After Briefly Surging Above $126 on Stalled Hormuz Talks",
+          "url": "https://www.euronews.com/business/2026/04/30/oil-temporarily-surges-above-126-per-barrel-as-us-iran-conflict-seemingly-intensifies",
+          "source": "Euronews",
+          "date": "April 30, 2026",
+          "summary": "WTI crude briefly spiked above $126/bbl mid-week as negotiations over reopening the Strait of Hormuz stalled, but retreated sharply to ~$102 by Friday as ceasefire talks resumed. The volatility underscores how sensitive oil markets remain to any Iran war headline.",
+          "tags": [
+            "Oil",
+            "WTI",
+            "Iran",
+            "Strait of Hormuz",
+            "Geopolitics"
+          ]
+        }
+      ],
+      "prediction_markets": [
+        {
+          "market": "BoC rate hike in 2026",
+          "yes_pct": "68.5%",
+          "no_pct": "31.5%",
+          "delta": null
+        },
+        {
+          "market": "Powell departs as Fed Chair by May 16",
+          "yes_pct": "86.0%",
+          "no_pct": "14.0%",
+          "delta": "+2.5%"
+        },
+        {
+          "market": "Zero Fed rate cuts in 2026",
+          "yes_pct": "56.9%",
+          "no_pct": "43.1%",
+          "delta": "−0.1%"
+        },
+        {
+          "market": "US invades Iran before 2027",
+          "yes_pct": "31.5%",
+          "no_pct": "68.5%",
+          "delta": null
+        },
+        {
+          "market": "New US-Canada trade deal before 2027",
+          "yes_pct": "32.0%",
+          "no_pct": "68.0%",
+          "delta": "−6.0%"
+        },
+        {
+          "market": "US recession by end of 2026",
+          "yes_pct": "24.0%",
+          "no_pct": "76.0%",
+          "delta": null
+        },
+        {
+          "market": "Canada recession before 2027",
+          "yes_pct": "10.0%",
+          "no_pct": "90.0%",
+          "delta": "−1.0%"
+        },
+        {
+          "market": "One Fed rate cut in 2026",
+          "yes_pct": "17.5%",
+          "no_pct": "82.5%",
+          "delta": null
+        },
+        {
+          "market": "Two or more Fed rate cuts in 2026",
+          "yes_pct": "12.5%",
+          "no_pct": "87.5%",
+          "delta": null
+        }
+      ],
+      "market_snapshot": {
+        "sp_tsx": {
+          "value": "33,944",
+          "direction": "neutral",
+          "change": "−0.06%"
+        },
+        "sp_500": {
+          "value": "7,255",
+          "direction": "up",
+          "change": "+0.64%"
+        },
+        "cad_usd": {
+          "value": "0.7370",
+          "direction": "up",
+          "change": "+0.30¢"
+        },
+        "wti_crude": {
+          "value": "$102.09/bbl",
+          "direction": "down",
+          "change": "−$2.98"
+        },
+        "ten_year_yield": {
+          "value": "4.39%",
+          "direction": "down",
+          "change": "−3bp"
+        }
+      },
+      "analysis": {
+        "theme": "Markets are pricing a 'soft landing plus' scenario — record equity highs on AI/earnings momentum coexist with a 68.5% probability of BoC hiking, reflecting an oil-driven inflation pulse that central banks can't ignore.",
+        "cad_angle": "The loonie at 73.70¢ US is being pulled in two directions: oil export revenues provide support, but the BoC-Fed rate divergence (BoC 2.25% vs Fed 3.50–3.75%) and USMCA trade uncertainty cap upside. A BoC hike would narrow the gap.",
+        "risk_factor": "Oil's intraweek swing from $126 to $102 shows how fragile the Iran situation is — a single Hormuz headline could re-spike crude, reignite inflation fears, and force both the BoC and Fed into uncomfortable policy corners.",
+        "polymarket_signal": "Traders see Powell's departure as near-certain (86%) and BoC hiking as more likely than not (68.5%), but a US-Canada trade deal is fading fast (−6% this hour to 32%) — markets are pricing geopolitical risk divergence between rates and trade."
+      },
+      "scenarios": {
+        "short_term": [
+          {
+            "label": "Iran Ceasefire / De-escalation",
+            "probability": "47%",
+            "impact": "WTI retraces to ~$100-105 · CAD +0.5% · TSX Energy −3% · yields tick down",
+            "delta": null,
+            "sub_outcomes": [
+              {
+                "label": "Full diplomatic resolution",
+                "conditional_prob": "30%",
+                "impact": "WTI ~$95-100 · CAD +1% · TSX Energy −5%"
+              },
+              {
+                "label": "Ceasefire stalls — cold peace",
+                "conditional_prob": "70%",
+                "impact": "WTI ~$105-110 · CAD flat · TSX Energy −1%"
+              }
+            ]
+          },
+          {
+            "label": "Iran Status Quo — Low Boil",
+            "probability": "35%",
+            "impact": "WTI ~$110-115 · CAD flat (~0.72) · TSX Energy +1% · yields steady",
+            "delta": null,
+            "sub_outcomes": []
+          },
+          {
+            "label": "Powell Departs, Warsh Takes Over Fed",
+            "probability": "86%",
+            "impact": "Leadership transition by May 15; Warsh vows 'regime change' — fewer meetings, new inflation framework possible. Markets price policy continuity for now.",
+            "delta": "+2.5%",
+            "sub_outcomes": []
+          }
+        ],
+        "long_term": [
+          {
+            "label": "BoC Hikes Rates in 2026",
+            "probability": "69%",
+            "impact": "CAD +1-2% · bank margins expand · yields push higher · housing cools further",
+            "delta": null,
+            "sub_outcomes": [
+              {
+                "label": "One 25bp hike (to 2.50%)",
+                "conditional_prob": "65%",
+                "impact": "CAD +0.5%"
+              },
+              {
+                "label": "Two or more hikes",
+                "conditional_prob": "35%",
+                "impact": "CAD +2% · yields spike 50bp+"
+              }
+            ]
+          },
+          {
+            "label": "Zero Fed Rate Cuts in 2026",
+            "probability": "57%",
+            "impact": "S&P 500 range-bound · rate-sensitive sectors underperform · CAD under pressure (rate divergence) · yield curve stays inverted",
+            "delta": "−0.1%",
+            "sub_outcomes": []
+          },
+          {
+            "label": "No New US-Canada Trade Deal",
+            "probability": "64%",
+            "impact": "CAD under pressure · exporters face uncertainty · manufacturing investment delayed",
+            "delta": null,
+            "sub_outcomes": [
+              {
+                "label": "Tariffs increase / trade war",
+                "conditional_prob": "30%",
+                "impact": "CAD −3% · TSX broad sell-off"
+              },
+              {
+                "label": "Muddling through — no major change",
+                "conditional_prob": "70%",
+                "impact": "CAD flat · TSX sector rotation"
+              }
+            ]
+          },
+          {
+            "label": "US Recession by End of 2026",
+            "probability": "24%",
+            "impact": "S&P 500 −15-20% · CAD weakens (flight to USD) · yields collapse · WTI demand destruction",
+            "delta": null,
+            "sub_outcomes": []
+          },
+          {
+            "label": "WTI $140-150+ Tail Risk",
+            "probability": "15%",
+            "impact": "TSX Energy +8-10% · CAD +2% then risk-off · significant inflation pressure · demand destruction risk",
+            "delta": null,
+            "sub_outcomes": []
+          }
+        ],
+        "key_observation": "The tension between the 47% ceasefire/de-escalation scenario (oil relief, CAD tailwind) and the 69% BoC hike probability (oil-driven inflation, CAD strength via tightening) reveals that even a peace deal may not unwind Canada's rate-hike trajectory quickly — energy prices have already embedded enough inflation risk that the BoC's bias has shifted hawkishly regardless of how the Iran conflict resolves."
+      }
+    }
+  ]
 }

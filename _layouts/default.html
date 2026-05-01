@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title }} | Market Digest</title>
+  <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+</head>
+<body>
+  <header>
+    <h1><span class="canada">🇨🇦</span> Market Digest</h1>
+    <div class="subtitle">Hourly trading hours news from a Canadian perspective</div>
+    <nav>
+      <a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>Today</a>
+      <a href="{{ '/archive/' | relative_url }}" {% if page.url contains '/archive/' %}class="active"{% endif %}>Archive</a>
+      <a href="https://github.com/promkev/market-digest">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    {{ content }}
+  </main>
+
+  <footer>
+    Generated hourly during NYSE trading hours (9 AM–4 PM EDT, Mon–Fri)
+    · <a href="https://github.com/promkev/market-digest">promkev/market-digest</a>
+  </footer>
+</body>
+</html>

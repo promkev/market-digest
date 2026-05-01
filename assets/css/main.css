@@ -115,30 +115,59 @@ section h2 {
 section h2 .flag { margin-right: 6px; }
 
 .story {
-  padding: 0.5rem 0;
+  padding: 0.75rem 0;
   border-bottom: 1px solid rgba(48, 54, 61, 0.5);
 }
 
 .story:last-child { border-bottom: none; }
 
-.story a {
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 500;
+.story-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.story a:hover { text-decoration: underline; }
+.story-title a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.story-title a:hover { text-decoration: underline; }
 
 .story .source {
   color: var(--text-secondary);
   font-size: 0.8rem;
-  margin-left: 0.5rem;
+  white-space: nowrap;
 }
 
-.story .impact {
+.story-summary {
+  color: var(--text);
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 0.25rem;
+}
+
+.story-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
   margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.story-meta .tag {
+  display: inline-block;
+  background: rgba(88, 166, 255, 0.12);
+  color: var(--accent);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .odds {
@@ -256,6 +285,40 @@ footer a { color: var(--accent); }
   color: var(--text-secondary);
   font-style: italic;
 }
+
+/* Analysis Section */
+.analysis-box {
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.08), rgba(63, 185, 80, 0.05));
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.analysis-box h2 {
+  border-bottom-color: var(--accent-dim);
+  color: var(--accent);
+  margin-top: 0;
+}
+
+.analysis-line {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.4);
+  line-height: 1.5;
+}
+
+.analysis-line:last-child {
+  border-bottom: none;
+}
+
+.analysis-line .key {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.analysis-line .positive { color: var(--green); }
+.analysis-line .negative { color: var(--red); }
+.analysis-line .neutral { color: var(--text-secondary); }
 
 /* Tables (Prediction Markets) */
 table {

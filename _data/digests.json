@@ -1,0 +1,106 @@
+{
+  "2026-05-01": [
+    {
+      "time": "5:34 PM EDT",
+      "date": "2026-05-01",
+      "post_market": true,
+      "canadian_markets": [
+        {
+          "title": "S&P/TSX edges lower as oil retreats from wartime highs, energy weighs",
+          "url": "https://www.bnnbloomberg.ca/business/2026/05/01/sptsx-composite-down-in-late-morning-trading-as-oil-moves-lower/",
+          "source": "BNN Bloomberg",
+          "date": "May 1, 2026",
+          "summary": "Canada's main stock index slipped 0.06% to 33,944, dragged by energy names as crude pulled back sharply from the $126/bbl peak touched Thursday.",
+          "tags": ["TSX", "Energy", "Oil"]
+        },
+        {
+          "title": "Bank of Canada warns of 'consecutive hikes' if oil keeps pushing inflation higher",
+          "url": "https://www.cbc.ca/news/business/bank-of-canada-interest-rate-april-2026-9.7181093",
+          "source": "CBC News",
+          "date": "April 29, 2026",
+          "summary": "Governor Tiff Macklem held at 2.25% for the fourth straight meeting but warned: if elevated oil prices feed into broader inflation, there may be a need for consecutive increases.",
+          "tags": ["BoC", "Inflation", "Rate", "Hike"]
+        }
+      ],
+      "us_global_markets": [
+        {
+          "title": "S&P 500 smashes through 7,270 — new all-time high as Mag 7 earnings deliver",
+          "url": "https://www.cnbc.com/quotes/.SPX",
+          "source": "CNBC",
+          "date": "May 1, 2026",
+          "summary": "The S&P 500 closed at a record 7,267.20 (+0.8%), touching an intraday all-time high of 7,272.52. Apple's Q2 — $111.2B revenue, +17% YoY — capped a week where Mag 7 earnings shattered expectations.",
+          "tags": ["S&P 500", "Record", "Apple", "Mag 7"]
+        },
+        {
+          "title": "Fed holds at 3.50-3.75% in Powell's final meeting; Warsh confirmation advances",
+          "url": "https://www.cnn.com/2026/04/29/business/live-news/federal-reserve-interest-rate",
+          "source": "CNN Business",
+          "date": "April 29, 2026",
+          "summary": "The Fed kept rates steady. Powell confirmed he departs as chair May 15. Kevin Warsh's nomination cleared a key Senate committee after Sen. Tillis lifted his block.",
+          "tags": ["Fed", "Powell", "Warsh"]
+        }
+      ],
+      "prediction_markets": [
+        {"market": "BoC hikes rates in 2026", "yes_pct": "68.5%", "no_pct": "31.5%", "delta": "+5.5%"},
+        {"market": "US invades Iran before 2027", "yes_pct": "33.5%", "no_pct": "66.5%", "delta": "+2.0%"},
+        {"market": "No Fed rate cuts in 2026", "yes_pct": "57.0%", "no_pct": "43.0%", "delta": null},
+        {"market": "1 Fed rate cut in 2026", "yes_pct": "17.5%", "no_pct": "82.5%", "delta": null},
+        {"market": "2+ Fed rate cuts in 2026", "yes_pct": "12.5%", "no_pct": "87.5%", "delta": null},
+        {"market": "New US-Canada trade deal before 2027", "yes_pct": "32.5%", "no_pct": "67.5%", "delta": null},
+        {"market": "US recession by end of 2026", "yes_pct": "24.0%", "no_pct": "76.0%", "delta": null},
+        {"market": "Canada recession before 2027", "yes_pct": "11.0%", "no_pct": "89.0%", "delta": null},
+        {"market": "Powell departs as Fed Chair by May 16", "yes_pct": "83.5%", "no_pct": "16.5%", "delta": null}
+      ],
+      "market_snapshot": {
+        "sp_tsx": {"value": "33,944", "direction": "down", "change": "-0.06%"},
+        "sp_500": {"value": "7,267.20", "direction": "up", "change": "+0.80%"},
+        "cad_usd": {"value": "0.7317", "direction": "neutral", "change": "flat"},
+        "wti_crude": {"value": "~$103/bbl", "direction": "down", "change": "-4.6%"},
+        "ten_year_yield": {"value": "4.36%", "direction": "down", "change": "-1.5bp"},
+        "gold": {"value": "$4,615/oz", "direction": "down", "change": "-0.5%"}
+      },
+      "analysis": {
+        "theme": "Markets are threading the needle — pricing both an AI-driven earnings boom and persistent geopolitical oil risk.",
+        "cad_angle": "The loonie is caught in a tug-of-war: oil revenues pad the current account, but US-Canada trade uncertainty caps upside.",
+        "risk_factor": "If oil-driven inflation broadens beyond energy, the BoC could be forced into a hiking cycle that cools housing just as mortgage renewals peak.",
+        "polymarket_signal": "The 68.5% BoC hike probability is the dominant macro trade — markets believe oil stays elevated long enough to force the Bank's hand."
+      },
+      "scenarios": {
+        "short_term": [
+          {"label": "Ceasefire / De-escalation", "probability": "47%", "impact": "WTI ~$100-105 · CAD flat · TSX Energy -3%",
+            "sub_outcomes": [
+              {"label": "Full diplomatic resolution", "conditional_prob": "30%", "impact": "WTI ~$95-100 · CAD +1% · TSX Energy -5%"},
+              {"label": "Cold peace", "conditional_prob": "70%", "impact": "WTI ~$105-110 · CAD flat · TSX Energy -1%"}
+            ]
+          },
+          {"label": "Status quo — low boil", "probability": "35%", "impact": "WTI ~$110-115 · CAD flat · TSX Energy +1%"},
+          {"label": "Escalation / Wider conflict", "probability": "33.5%", "impact": "WTI $130+ · CAD -2% · TSX Energy +5%",
+            "sub_outcomes": [
+              {"label": "Strait of Hormuz disruption", "conditional_prob": "40%", "impact": "WTI $150+ · CAD -3%"},
+              {"label": "Limited strike campaign", "conditional_prob": "60%", "impact": "WTI ~$120-130 · CAD -1%"}
+            ]
+          },
+          {"label": "BoC hikes rates in 2026", "probability": "68.5%", "delta": "↑1.0%", "impact": "CAD +1-2%",
+            "sub_outcomes": [
+              {"label": "One 25bp hike", "conditional_prob": "65%", "impact": "CAD +0.5%"},
+              {"label": "Two or more hikes", "conditional_prob": "35%", "impact": "CAD +2% · Yields spike 50bp+"}
+            ]
+          }
+        ],
+        "long_term": [
+          {"label": "Zero rate cuts in 2026", "probability": "57.0%", "impact": "S&P range-bound · CAD under pressure"},
+          {"label": "No new trade deal", "probability": "67.5%", "impact": "CAD under pressure · Exporters face uncertainty",
+            "sub_outcomes": [
+              {"label": "Tariffs increase", "conditional_prob": "30%", "impact": "CAD -3% · TSX sell-off"},
+              {"label": "Muddling through", "conditional_prob": "70%", "impact": "CAD flat · Sector rotation"}
+            ]
+          },
+          {"label": "New US-Canada trade deal", "probability": "32.5%", "impact": "CAD +1-2% · TSX broad rally"},
+          {"label": "US recession by end of 2026", "probability": "24.0%", "impact": "S&P -15-20% · CAD weakens"},
+          {"label": "Canada recession before 2027", "probability": "11.0%", "impact": "TSX -10-15% · CAD -2-3% · BoC forced to cut"}
+        ],
+        "key_observation": "The market is simultaneously pricing a 68.5% BoC hike and a 47% Iran de-escalation. These cannot both materialize. If de-escalation wins, oil drops and the hiking thesis collapses. If escalation wins, Macklem's warning becomes a near-certainty."
+      }
+    }
+  ]
+}

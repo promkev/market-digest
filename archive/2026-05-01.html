@@ -5,16 +5,107 @@ title: May 1, 2026 Digest
 
 {% assign today_key = "2026-05-01" %}
 {% assign entries = site.data.digests[today_key] %}
-{% for entry in entries reversed %}
-  {% include digest-entry.html
-     time=entry.time
-     date=entry.date
-     trading=entry.post_market
-     canadian_markets=entry.canadian_markets
-     us_global_markets=entry.us_global_markets
-     prediction_markets=entry.prediction_markets
-     market_snapshot=entry.market_snapshot
-     analysis=entry.analysis
-     scenarios=entry.scenarios
-  %}
-{% endfor %}
+
+<div class="hero-bar">
+  <div class="hero-inner">
+    <div class="hero-info">
+      <h2 id="heroDate">Friday, May 1, 2026</h2>
+      <div class="hero-meta" id="heroMeta">Archived digest</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="{{ '/' | relative_url }}" class="btn btn-hero-outline">← Today</a>
+      <a href="{{ '/archive/' | relative_url }}" class="btn btn-hero-outline">Archive</a>
+    </div>
+  </div>
+</div>
+
+<main>
+  {% if entries %}
+    <!-- ⏱ Digest Time Selector -->
+    <div class="digest-selector" id="digestSelector">
+      {% for entry in entries reversed %}
+        {% capture short_time %}{{ entry.time | remove: " EDT" | remove: " EST" }}{% endcapture %}
+        {% if entry.post_market %}
+          {% capture label %}{{ short_time }} · Post-Market{% endcapture %}
+        {% else %}
+          {% capture label %}{{ short_time }} · Trading{% endcapture %}
+        {% endif %}
+        <button class="digest-pill{% if forloop.first %} active{% endif %}"
+                data-index="{{ forloop.index0 }}"
+                data-fulltime="{{ entry.time }}"
+                data-label="{{ label }}">
+          {{ short_time }}
+        </button>
+      {% endfor %}
+    </div>
+
+    <!-- 📋 Digest Panels -->
+    {% for entry in entries reversed %}
+    <div class="digest-panel{% if forloop.first %} active{% endif %}"
+         data-index="{{ forloop.index0 }}"
+         data-time="{{ entry.time }}">
+      {% include digest-entry.html
+         time=entry.time
+         date=entry.date
+         trading=entry.post_market
+         canadian_markets=entry.canadian_markets
+         us_global_markets=entry.us_global_markets
+         prediction_markets=entry.prediction_markets
+         market_snapshot=entry.market_snapshot
+         analysis=entry.analysis
+         scenarios=entry.scenarios
+      %}
+    </div>
+    {% endfor %}
+
+    <script>
+      (function() {
+        var pills = document.querySelectorAll('.digest-pill');
+        var panels = document.querySelectorAll('.digest-panel');
+        var heroDate = document.getElementById('heroDate');
+        var heroMeta = document.getElementById('heroMeta');
+
+        function switchDigest(index) {
+          pills.forEach(function(p) { p.classList.remove('active'); });
+          pills[index].classList.add('active');
+          panels.forEach(function(p) { p.classList.remove('active'); });
+          panels[index].classList.add('active');
+
+          var pill = pills[index];
+          var fullTime = pill.getAttribute('data-fulltime');
+          var label = pill.getAttribute('data-label');
+
+          heroMeta.style.opacity = '0';
+          heroMeta.style.transition = 'opacity 0.15s ease';
+          setTimeout(function() {
+            heroMeta.textContent = fullTime + ' · ' + label + ' · Archived';
+            heroMeta.style.opacity = '1';
+          }, 150);
+        }
+
+        pills.forEach(function(pill) {
+          pill.addEventListener('click', function() {
+            switchDigest(parseInt(this.getAttribute('data-index')));
+          });
+        });
+
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+            var active = document.querySelector('.digest-pill.active');
+            if (!active) return;
+            var current = parseInt(active.getAttribute('data-index'));
+            var next = e.key === 'ArrowRight' ? Math.min(current + 1, pills.length - 1) : Math.max(current - 1, 0);
+            if (next !== current) switchDigest(next);
+          }
+        });
+      })();
+    </script>
+
+  {% else %}
+    <div class="empty-state">
+      <h2>No digests for this date 📭</h2>
+      <p style="color: var(--text-secondary);">No digest entries could be loaded for this date.</p>
+    </div>
+  {% endif %}
+</main>

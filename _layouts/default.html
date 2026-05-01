@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ page.title }} | Market Digest</title>
+  <!-- Blocking theme script — prevents white flash -->
+  <script>
+    (function() {
+      var saved = localStorage.getItem('market-digest-theme');
+      if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +35,7 @@
         <a href="https://github.com/promkev/market-digest">GitHub</a>
         <span class="status-badge" id="liveBadge">● LIVE</span>
         <span class="theme-toggle" id="themeToggle" title="Toggle theme">
-          <span class="toggle-icon" id="themeIcon">☀️</span>
+          <span class="toggle-icon" id="themeIcon"></span>
           <span class="toggle-track"><span class="toggle-dot"></span></span>
         </span>
       </nav>
@@ -39,23 +50,16 @@
 
   <script>
     (function() {
-      const html = document.documentElement;
-      const icon = document.getElementById('themeIcon');
-      const badge = document.getElementById('liveBadge');
+      var html = document.documentElement;
+      var icon = document.getElementById('themeIcon');
+      var badge = document.getElementById('liveBadge');
 
-      // Theme
-      const saved = localStorage.getItem('market-digest-theme');
-      if (saved) {
-        html.setAttribute('data-theme', saved);
-        icon.textContent = saved === 'dark' ? '🌙' : '☀️';
-      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        html.setAttribute('data-theme', 'dark');
-        icon.textContent = '🌙';
-      }
+      // Set icon after blocking script ran
+      icon.textContent = html.getAttribute('data-theme') === 'dark' ? '🌙' : '☀️';
 
       document.getElementById('themeToggle').addEventListener('click', function() {
-        const current = html.getAttribute('data-theme');
-        const next = current === 'light' ? 'dark' : 'light';
+        var current = html.getAttribute('data-theme');
+        var next = current === 'light' ? 'dark' : 'light';
         html.setAttribute('data-theme', next);
         icon.textContent = next === 'dark' ? '🌙' : '☀️';
         localStorage.setItem('market-digest-theme', next);
@@ -63,8 +67,8 @@
 
       // Live badge (trading hours check)
       var now = new Date();
-      var day = now.getDay(); // 0=Sun, 6=Sat
-      var hour = now.getHours(); // 0-23 (local EDT)
+      var day = now.getDay();
+      var hour = now.getHours();
       var isTrading = day >= 1 && day <= 5 && hour >= 9 && hour < 16;
       if (isTrading) {
         badge.textContent = '● LIVE';

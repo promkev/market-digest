@@ -125,9 +125,10 @@
   </div>
   {% endif %}
 
-  <!-- Prediction Markets (Polymarket) -->
+  <!-- Prediction Markets (Polymarket) + Analysis side by side -->
+  {% if include.prediction_markets or include.analysis %}
   {% if include.prediction_markets %}
-  <div class="card">
+  <div class="card" style="align-self: start;">
     <h3>📊 Prediction Markets</h3>
     <table>
       <thead>
@@ -153,7 +154,7 @@
   {% endif %}
 
   {% if include.analysis %}
-  <div class="card card-full">
+  <div class="card" style="align-self: start;">
     <h3 style="margin-bottom: 14px;">🧠 Market Analysis</h3>
     <div class="analysis-block">
       {% if include.analysis.theme %}
@@ -178,6 +179,7 @@
       {% endif %}
     </div>
   </div>
+  {% endif %}
   {% endif %}
 
   <!-- Scenarios -->

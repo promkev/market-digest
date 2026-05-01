@@ -124,8 +124,8 @@
         <div class="scenario-impact">{{ s.impact }}</div>
         {% endif %}
         {% for sub in s.sub_outcomes %}
-        <div class="scenario-impact" style="padding-left: 1.5rem;">
-          ↳ <strong>{{ sub.label }}</strong> ({{ sub.conditional_prob }}{% if sub.delta %} <span class="pos">↑{{ sub.delta }}</span>{% endif %}): {{ sub.impact }}
+        <div class="scenario-impact">
+          ↳ <strong>{{ sub.label }}</strong> ({{ sub.conditional_prob }}{% if sub.delta %} ↑{{ sub.delta }}{% endif %}): {{ sub.impact }}
         </div>
         {% endfor %}
         {% endfor %}
@@ -144,8 +144,8 @@
         <div class="scenario-impact">{{ s.impact }}</div>
         {% endif %}
         {% for sub in s.sub_outcomes %}
-        <div class="scenario-impact" style="padding-left: 1.5rem;">
-          ↳ <strong>{{ sub.label }}</strong> ({{ sub.conditional_prob }}{% if sub.delta %} <span class="pos">↑{{ sub.delta }}</span>{% endif %}): {{ sub.impact }}
+        <div class="scenario-impact">
+          ↳ <strong>{{ sub.label }}</strong> ({{ sub.conditional_prob }}{% if sub.delta %} ↑{{ sub.delta }}{% endif %}): {{ sub.impact }}
         </div>
         {% endfor %}
         {% endfor %}

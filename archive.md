@@ -18,19 +18,26 @@ permalink: /archive/
 </div>
 
 <main>
-  {% assign entries = site.pages | where_exp: "item", "item.url contains '/archive/' and item.url != '/archive/'" %}
+  {% assign all_archive = site.pages | where_exp: "item", "item.url contains '/archive/'" %}
+  {% assign count = 0 %}
+  {% for p in all_archive %}
+    {% if p.url != '/archive/' %}
+      {% assign count = count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
 
-  {% assign entries_len = entries | size %}
-  {% if entries_len > 0 %}
+  {% if count > 0 %}
     <h3 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:16px;">
-      {{ entries_len }} trading day{% if entries_len > 1 %}s{% endif %} archived
+      {{ count }} trading day{% if count > 1 %}s{% endif %} archived
     </h3>
     <ul class="archive-list">
-      {% for entry in entries reversed %}
-      <li>
-        <a href="{{ entry.url | relative_url }}">{{ entry.url | remove: '/archive/' | remove: '.html' | date: "%A, %B %-d, %Y" }}</a>
-        <span class="date">{{ entry.url | remove: '/archive/' | remove: '.html' }}</span>
-      </li>
+      {% for entry in all_archive %}
+        {% if entry.url != '/archive/' %}
+        <li>
+          <a href="{{ entry.url | relative_url }}">{{ entry.url | remove: '/archive/' | remove: '.html' | date: "%A, %B %-d, %Y" }}</a>
+          <span class="date">{{ entry.url | remove: '/archive/' | remove: '.html' }}</span>
+        </li>
+        {% endif %}
       {% endfor %}
     </ul>
   {% else %}

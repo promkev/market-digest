@@ -18,9 +18,22 @@
     </nav>
   </header>
 
-  <main>
+  <main id="content-container">
     {{ content }}
   </main>
+
+  <script>
+    (function() {
+      var container = document.getElementById('content-container');
+      if (!container) return;
+      var entries = container.querySelectorAll('.entry');
+      if (entries.length <= 1) return;
+      // Reverse order: newest first
+      for (var i = entries.length - 1; i >= 0; i--) {
+        container.appendChild(entries[i]);
+      }
+    })();
+  </script>
 
   <footer>
     Generated hourly during NYSE trading hours (9 AM–4 PM EDT, Mon–Fri)

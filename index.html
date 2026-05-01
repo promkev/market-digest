@@ -7,7 +7,7 @@ permalink: /
 {% assign today_key = site.time | date: "%Y-%m-%d" %}
 {% assign today_entries = site.data.digests[today_key] %}
 
-{% if today_entries %}
+{% if today_entries and today_entries.size > 0 %}
   {% for entry in today_entries reversed %}
     {% include digest-entry.html
        time=entry.time

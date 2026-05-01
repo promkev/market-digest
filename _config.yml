@@ -23,3 +23,9 @@ include:
 exclude:
   - README.md
   - templates
+  - sketches
+  - market-pulse.html
+  - market-pulse-v2.html
+  - market-pulse-v3.html
+  - market-pulse-v4.html
+  - scenario-trees-v3.html

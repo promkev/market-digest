@@ -1,124 +1,197 @@
-<div class="entry">
-  <div class="entry-header">
-    <span class="entry-time">🕙 {{ include.time }}</span>
-    <span class="entry-meta">{{ include.date | date: "%A, %B %-d, %Y" }}{% if include.trading %} · Trading Hours{% endif %}</span>
-  </div>
+<div class="card-grid" style="margin-bottom: 32px;">
 
-  <section>
-    <h2><span class="flag">🇨🇦</span> Canadian Markets</h2>
-    {% for item in include.canadian_markets %}
-    <div class="story">
-      <div class="story-title">
-        <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
-        <span class="source">{{ item.source }}{% if item.date %} · {{ item.date }}{% endif %}</span>
-      </div>
-      <div class="story-summary">{{ item.summary }}</div>
-      <div class="story-meta">
-        {% for tag in item.tags %}<span class="tag">{{ tag }}</span> {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
-  </section>
-
-  <section>
-    <h2><span class="flag">🇺🇸</span> US & Global Markets</h2>
-    {% for item in include.us_global_markets %}
-    <div class="story">
-      <div class="story-title">
-        <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
-        <span class="source">{{ item.source }}{% if item.date %} · {{ item.date }}{% endif %}</span>
-      </div>
-      <div class="story-summary">{{ item.summary }}</div>
-      <div class="story-meta">
-        {% for tag in item.tags %}<span class="tag">{{ tag }}</span> {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
-  </section>
-
-  {% if include.prediction_markets %}
-  <section>
-    <h2>📊 Prediction Markets</h2>
-    <table>
-      <tr><th>MARKET</th><th>YES%</th><th>NO%</th><th>Δ</th></tr>
-      {% for market in include.prediction_markets %}
-      <tr>
-        <td>{{ market.market }}</td>
-        {% assign yes_dir = "up" %}
-        {% if market.delta contains "-" %}{% assign yes_dir = "down" %}{% endif %}
-        <td class="{{ yes_dir }}">{{ market.yes_pct }}</td>
-        <td>{{ market.no_pct }}</td>
-        <td>{{ market.delta }}</td>
-      </tr>
-      {% endfor %}
-    </table>
-  </section>
-  {% endif %}
-
+  <!-- Market Snapshot Metrics -->
   {% if include.market_snapshot %}
-  <section>
-    <h2>📈 Market Snapshot</h2>
-    <div class="indices">
-      {% for key in (1..20) %}
-        {% unless include.market_snapshot.sp_tsx == nil and include.market_snapshot.sp_500 == nil %}
-        {% endunless %}
-      {% endfor %}
-      {% if include.market_snapshot.sp_tsx %}
-      <div class="index-item">
-        <div class="name">S&P/TSX Composite</div>
-        <div class="price{% if include.market_snapshot.sp_tsx.direction == 'up' %} up{% elsif include.market_snapshot.sp_tsx.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.sp_tsx.value }} {% if include.market_snapshot.sp_tsx.direction == 'up' %}🔺{% elsif include.market_snapshot.sp_tsx.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.sp_tsx.change }}</div>
+  <div class="card-full" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+    <div class="metrics-bar" style="margin-bottom: 0;">
+      {% if include.market_snapshot.sp_500 %}
+      <div class="metric-card">
+        <div class="metric-label">S&P 500</div>
+        <div class="metric-value">{{ include.market_snapshot.sp_500.value }}</div>
+        {% assign dir = include.market_snapshot.sp_500.direction %}
+        {% if dir == "up" or dir == "positive" %}
+        <div class="metric-change up">{{ include.market_snapshot.sp_500.change }}</div>
+        {% elsif dir == "down" or dir == "negative" %}
+        <div class="metric-change down">{{ include.market_snapshot.sp_500.change }}</div>
+        {% else %}
+        <div class="metric-change" style="color:var(--text-muted)">{{ include.market_snapshot.sp_500.change }}</div>
+        {% endif %}
       </div>
       {% endif %}
-      {% if include.market_snapshot.sp_500 %}
-      <div class="index-item">
-        <div class="name">S&P 500</div>
-        <div class="price{% if include.market_snapshot.sp_500.direction == 'up' %} up{% elsif include.market_snapshot.sp_500.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.sp_500.value }} {% if include.market_snapshot.sp_500.direction == 'up' %}🔺{% elsif include.market_snapshot.sp_500.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.sp_500.change }}</div>
+      {% if include.market_snapshot.sp_tsx %}
+      <div class="metric-card">
+        <div class="metric-label">S&P/TSX</div>
+        <div class="metric-value">{{ include.market_snapshot.sp_tsx.value }}</div>
+        {% assign dir = include.market_snapshot.sp_tsx.direction %}
+        {% if dir == "up" or dir == "positive" %}
+        <div class="metric-change up">{{ include.market_snapshot.sp_tsx.change }}</div>
+        {% elsif dir == "down" or dir == "negative" %}
+        <div class="metric-change down">{{ include.market_snapshot.sp_tsx.change }}</div>
+        {% else %}
+        <div class="metric-change" style="color:var(--text-muted)">{{ include.market_snapshot.sp_tsx.change }}</div>
+        {% endif %}
       </div>
       {% endif %}
       {% if include.market_snapshot.cad_usd %}
-      <div class="index-item">
-        <div class="name">CAD/USD</div>
-        <div class="price{% if include.market_snapshot.cad_usd.direction == 'up' %} up{% elsif include.market_snapshot.cad_usd.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.cad_usd.value }} {% if include.market_snapshot.cad_usd.direction == 'up' %}🔺{% elsif include.market_snapshot.cad_usd.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.cad_usd.change }}</div>
+      <div class="metric-card">
+        <div class="metric-label">CAD/USD</div>
+        <div class="metric-value">{{ include.market_snapshot.cad_usd.value }}</div>
+        {% assign dir = include.market_snapshot.cad_usd.direction %}
+        {% if dir == "up" or dir == "positive" %}
+        <div class="metric-change up">{{ include.market_snapshot.cad_usd.change }}</div>
+        {% elsif dir == "down" or dir == "negative" %}
+        <div class="metric-change down">{{ include.market_snapshot.cad_usd.change }}</div>
+        {% else %}
+        <div class="metric-change" style="color:var(--text-muted)">{{ include.market_snapshot.cad_usd.change }}</div>
+        {% endif %}
       </div>
       {% endif %}
       {% if include.market_snapshot.wti_crude %}
-      <div class="index-item">
-        <div class="name">WTI Crude</div>
-        <div class="price{% if include.market_snapshot.wti_crude.direction == 'up' %} up{% elsif include.market_snapshot.wti_crude.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.wti_crude.value }} {% if include.market_snapshot.wti_crude.direction == 'up' %}🔺{% elsif include.market_snapshot.wti_crude.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.wti_crude.change }}</div>
+      <div class="metric-card">
+        <div class="metric-label">WTI Crude</div>
+        <div class="metric-value">{{ include.market_snapshot.wti_crude.value }}</div>
+        {% assign dir = include.market_snapshot.wti_crude.direction %}
+        {% if dir == "up" or dir == "positive" %}
+        <div class="metric-change up">{{ include.market_snapshot.wti_crude.change }}</div>
+        {% elsif dir == "down" or dir == "negative" %}
+        <div class="metric-change down">{{ include.market_snapshot.wti_crude.change }}</div>
+        {% else %}
+        <div class="metric-change" style="color:var(--text-muted)">{{ include.market_snapshot.wti_crude.change }}</div>
+        {% endif %}
       </div>
       {% endif %}
       {% if include.market_snapshot.ten_year_yield %}
-      <div class="index-item">
-        <div class="name">U.S. 10Y Yield</div>
-        <div class="price{% if include.market_snapshot.ten_year_yield.direction == 'up' %} up{% elsif include.market_snapshot.ten_year_yield.direction == 'down' %} down{% endif %}">{{ include.market_snapshot.ten_year_yield.value }} {% if include.market_snapshot.ten_year_yield.direction == 'up' %}🔺{% elsif include.market_snapshot.ten_year_yield.direction == 'down' %}🔻{% else %}🟢{% endif %} {{ include.market_snapshot.ten_year_yield.change }}</div>
+      <div class="metric-card">
+        <div class="metric-label">10Y Yield</div>
+        <div class="metric-value">{{ include.market_snapshot.ten_year_yield.value }}</div>
+        {% assign dir = include.market_snapshot.ten_year_yield.direction %}
+        {% if dir == "up" or dir == "positive" %}
+        <div class="metric-change down">{{ include.market_snapshot.ten_year_yield.change }}</div>
+        {% elsif dir == "down" or dir == "negative" %}
+        <div class="metric-change up">{{ include.market_snapshot.ten_year_yield.change }}</div>
+        {% else %}
+        <div class="metric-change" style="color:var(--text-muted)">{{ include.market_snapshot.ten_year_yield.change }}</div>
+        {% endif %}
       </div>
       {% endif %}
     </div>
-  </section>
+  </div>
+  {% endif %}
+
+  <!-- Digest Header -->
+  <div class="card-full" style="padding: 16px 24px; margin-bottom: 0;">
+    <span style="font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: var(--text);">🕙 {{ include.time }}</span>
+    <span style="margin-left: 12px; font-size: 14px; font-weight: 500; color: var(--text-muted);">{{ include.date | date: "%A, %B %-d, %Y" }}{% if include.trading %} · Trading Hours{% endif %}</span>
+    {% if include.post_market %}
+    <span class="status-badge" style="margin-left: 12px; background: var(--accent-subtle); color: var(--accent);">Post-Market</span>
+    {% endif %}
+  </div>
+
+  <!-- Canadian Markets -->
+  {% if include.canadian_markets %}
+  <div class="card">
+    <h3>🇨🇦 Canadian Markets</h3>
+    {% for item in include.canadian_markets %}
+    <div class="story-item">
+      <div style="margin-bottom: 4px;">
+        {% for tag in item.tags %}
+        <span class="tag tag-purple">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      <h4><a href="{{ item.url }}" target="_blank" style="color: var(--text); text-decoration: none;">{{ item.title }}</a></h4>
+      <div class="story-source">{{ item.source }}{% if item.date %} · {{ item.date }}{% endif %}</div>
+      <div class="story-summary">{{ item.summary }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- US & Global Markets -->
+  {% if include.us_global_markets %}
+  <div class="card">
+    <h3>🇺🇸 US & Global Markets</h3>
+    {% for item in include.us_global_markets %}
+    <div class="story-item">
+      <div style="margin-bottom: 4px;">
+        {% for tag in item.tags %}
+        <span class="tag tag-purple">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      <h4><a href="{{ item.url }}" target="_blank" style="color: var(--text); text-decoration: none;">{{ item.title }}</a></h4>
+      <div class="story-source">{{ item.source }}{% if item.date %} · {{ item.date }}{% endif %}</div>
+      <div class="story-summary">{{ item.summary }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Prediction Markets (Polymarket) -->
+  {% if include.prediction_markets %}
+  <div class="card">
+    <h3>📊 Prediction Markets</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Contract</th>
+          <th>Odds</th>
+          <th>Δ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for market in include.prediction_markets %}
+        {% assign yes_dir = "up" %}
+        {% if market.delta contains "-" %}{% assign yes_dir = "down" %}{% endif %}
+        <tr>
+          <td>{{ market.market }}</td>
+          <td class="mono {{ yes_dir }}">{{ market.yes_pct }}</td>
+          <td class="mono{% if market.delta contains '+' %} up{% elsif market.delta contains '-' %} down{% endif %}">{{ market.delta }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% endif %}
 
   {% if include.analysis %}
-  <section class="analysis-box">
-    <h2>🧠 Analysis</h2>
-    {% if include.analysis.theme %}<div class="analysis-line"><span class="key">Theme:</span> {{ include.analysis.theme }}</div>{% endif %}
-    {% if include.analysis.cad_angle %}<div class="analysis-line"><span class="key">CAD Angle:</span> {{ include.analysis.cad_angle }}</div>{% endif %}
-    {% if include.analysis.risk_factor %}<div class="analysis-line"><span class="key">Risk Factor:</span> {{ include.analysis.risk_factor }}</div>{% endif %}
-    {% if include.analysis.polymarket_signal %}<div class="analysis-line"><span class="key">Polymarket Signal:</span> {{ include.analysis.polymarket_signal }}</div>{% endif %}
-  </section>
+  <div class="card card-full">
+    <h3 style="margin-bottom: 14px;">🧠 Market Analysis</h3>
+    <div class="analysis-block">
+      {% if include.analysis.theme %}
+      <div style="margin-bottom: 14px;"><span style="font-weight: 700; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;">Theme</span>
+        <p style="margin-top: 2px; margin-bottom: 0;">{{ include.analysis.theme }}</p>
+      </div>
+      {% endif %}
+      {% if include.analysis.cad_angle %}
+      <div style="margin-bottom: 14px;"><span style="font-weight: 700; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;">CAD Angle</span>
+        <p style="margin-top: 2px; margin-bottom: 0;">{{ include.analysis.cad_angle }}</p>
+      </div>
+      {% endif %}
+      {% if include.analysis.risk_factor %}
+      <div style="margin-bottom: 14px;"><span style="font-weight: 700; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;">Risk Factor</span>
+        <p style="margin-top: 2px; margin-bottom: 0;">{{ include.analysis.risk_factor }}</p>
+      </div>
+      {% endif %}
+      {% if include.analysis.polymarket_signal %}
+      <div style="margin-bottom: 14px;"><span style="font-weight: 700; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;">Polymarket Signal</span>
+        <p style="margin-top: 2px; margin-bottom: 0;">{{ include.analysis.polymarket_signal }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
   {% endif %}
 
+  <!-- Scenarios -->
   {% if include.scenarios %}
-  <section class="scenario-section">
-    <h2>🎲 What If? — Scenario Map</h2>
+  <div class="card card-full">
+    <h3 style="margin-bottom: 14px;">🎲 What If? — Scenario Map</h3>
     <div class="scenario-grid">
-
       {% if include.scenarios.short_term %}
       <div class="scenario-card short-term">
         <h3>🟢 Short Term (days–weeks)</h3>
         {% for s in include.scenarios.short_term %}
         <div class="scenario-row">
-          <span class="outcome-label">{{ s.label }}</span>
-          <span class="prob{% if s.probability.size > 0 and s.probability | plus: 0 >= 40 %} high{% elsif s.probability.size > 0 and s.probability | plus: 0 >= 20 %} medium{% elsif s.probability.size > 0 %} low{% endif %}">{{ s.probability }}{% if s.delta %} <span class="pos">↑{{ s.delta }}</span>{% endif %}</span>
+          <span>{{ s.label }}</span>
+          <span class="prob{% if s.probability.size > 0 and s.probability | plus: 0 >= 40 %} high{% elsif s.probability.size > 0 and s.probability | plus: 0 >= 20 %} medium{% elsif s.probability.size > 0 %} low{% endif %}">{{ s.probability }}{% if s.delta %} <span style="color:var(--green);font-size:11px;">↑{{ s.delta }}</span>{% endif %}</span>
         </div>
         {% if s.impact %}
         <div class="scenario-impact">{{ s.impact }}</div>
@@ -137,8 +210,8 @@
         <h3>🔮 Long Term (months)</h3>
         {% for s in include.scenarios.long_term %}
         <div class="scenario-row">
-          <span class="outcome-label">{{ s.label }}</span>
-          <span class="prob{% if s.probability.size > 0 and s.probability | plus: 0 >= 40 %} high{% elsif s.probability.size > 0 and s.probability | plus: 0 >= 20 %} medium{% elsif s.probability.size > 0 %} low{% endif %}">{{ s.probability }}{% if s.delta %} <span class="pos">↑{{ s.delta }}</span>{% endif %}</span>
+          <span>{{ s.label }}</span>
+          <span class="prob{% if s.probability.size > 0 and s.probability | plus: 0 >= 40 %} high{% elsif s.probability.size > 0 and s.probability | plus: 0 >= 20 %} medium{% elsif s.probability.size > 0 %} low{% endif %}">{{ s.probability }}{% if s.delta %} <span style="color:var(--green);font-size:11px;">↑{{ s.delta }}</span>{% endif %}</span>
         </div>
         {% if s.impact %}
         <div class="scenario-impact">{{ s.impact }}</div>
@@ -154,11 +227,11 @@
 
       {% if include.scenarios.key_observation %}
       <div class="scenario-takeaway">
-        <span class="label">📌 Key observation:</span> {{ include.scenarios.key_observation }}
+        📌 <strong style="color:var(--accent);">Key observation:</strong> {{ include.scenarios.key_observation }}
       </div>
       {% endif %}
-
     </div>
-  </section>
+  </div>
   {% endif %}
+
 </div>

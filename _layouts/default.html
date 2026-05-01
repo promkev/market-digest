@@ -1,43 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ page.title }} | Market Digest</title>
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 </head>
 <body>
-  <header>
-    <h1><span class="canada">🇨🇦</span> Market Digest</h1>
-    <div class="subtitle">Hourly trading hours news from a Canadian perspective</div>
-    <nav>
-      <a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>Today</a>
-      <a href="{{ '/archive/' | relative_url }}" {% if page.url contains '/archive/' %}class="active"{% endif %}>Archive</a>
-      <a href="https://github.com/promkev/market-digest">GitHub</a>
-    </nav>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="flag">🇨🇦</span>
+        <h1>Market Digest</h1>
+      </div>
+      <nav class="nav">
+        <a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>Today</a>
+        <a href="{{ '/archive/' | relative_url }}" {% if page.url contains '/archive/' %}class="active"{% endif %}>Archive</a>
+        <a href="https://github.com/promkev/market-digest">GitHub</a>
+        <span class="status-badge" id="liveBadge">● LIVE</span>
+        <span class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="toggle-icon" id="themeIcon">☀️</span>
+          <span class="toggle-track"><span class="toggle-dot"></span></span>
+        </span>
+      </nav>
+    </div>
   </header>
 
-  <main id="content-container">
-    {{ content }}
-  </main>
+  {{ content }}
+
+  <footer class="footer">
+    Generated hourly during NYSE trading hours (9 AM–4 PM EDT, Mon–Fri) · Hourly deltas via Polymarket · <a href="https://github.com/promkev/market-digest">promkev/market-digest</a>
+  </footer>
 
   <script>
     (function() {
-      var container = document.getElementById('content-container');
-      if (!container) return;
-      var entries = container.querySelectorAll('.entry');
-      if (entries.length <= 1) return;
-      // Reverse order: newest first
-      for (var i = entries.length - 1; i >= 0; i--) {
-        container.appendChild(entries[i]);
+      const html = document.documentElement;
+      const icon = document.getElementById('themeIcon');
+      const badge = document.getElementById('liveBadge');
+
+      // Theme
+      const saved = localStorage.getItem('market-digest-theme');
+      if (saved) {
+        html.setAttribute('data-theme', saved);
+        icon.textContent = saved === 'dark' ? '🌙' : '☀️';
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        html.setAttribute('data-theme', 'dark');
+        icon.textContent = '🌙';
+      }
+
+      document.getElementById('themeToggle').addEventListener('click', function() {
+        const current = html.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        icon.textContent = next === 'dark' ? '🌙' : '☀️';
+        localStorage.setItem('market-digest-theme', next);
+      });
+
+      // Live badge (trading hours check)
+      var now = new Date();
+      var day = now.getDay(); // 0=Sun, 6=Sat
+      var hour = now.getHours(); // 0-23 (local EDT)
+      var isTrading = day >= 1 && day <= 5 && hour >= 9 && hour < 16;
+      if (isTrading) {
+        badge.textContent = '● LIVE';
+        badge.style.background = 'rgba(20,158,97,0.14)';
+        badge.style.color = 'var(--green)';
+      } else {
+        badge.textContent = '● CLOSED';
       }
     })();
   </script>
-
-  <footer>
-    Generated hourly during NYSE trading hours (9 AM–4 PM EDT, Mon–Fri)
-    · <a href="https://github.com/promkev/market-digest">promkev/market-digest</a>
-  </footer>
 </body>
 </html>

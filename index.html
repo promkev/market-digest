@@ -4,37 +4,32 @@ title: Today's Digest
 permalink: /
 ---
 
-{% assign today_key = site.time | date: "%Y-%m-%d" %}
-{% assign today_entries = site.data.digests[today_key] %}
+{% assign today = site.time | date: "%Y-%m-%d" %}
+{% assign entries = site.archive | where_exp: "page", "page.date == today" %}
 
-{% if today_entries and today_entries.size > 0 %}
-  {% for entry in today_entries reversed %}
-    {% include digest-entry.html
-       time=entry.time
-       date=entry.date
-       trading=entry.post_market
-       canadian_markets=entry.canadian_markets
-       us_global_markets=entry.us_global_markets
-       prediction_markets=entry.prediction_markets
-       market_snapshot=entry.market_snapshot
-       analysis=entry.analysis
-       scenarios=entry.scenarios
-    %}
-  {% endfor %}
-{% else %}
-  <div class="entry">
-    <div class="entry-header">
-      <span class="entry-time">{{ site.time | date: "%A, %B %-d, %Y" }}</span>
-      <span class="entry-meta">NYSE Trading Hours · 9 AM–4 PM EDT</span>
+<div class="hero-bar">
+  <div class="hero-inner">
+    <div class="hero-info">
+      <h2>{{ site.time | date: "%A, %B %-d, %Y" }}</h2>
+      <div class="hero-meta">NYSE Trading Hours · 9 AM–4 PM EDT · Next update: {{ site.time | date: "%l %p" | strip }} hourly</div>
     </div>
-    <div class="empty-state">
-      <h2>Waiting for the market to open... 🕘</h2>
-      <p>Digests will appear here once trading begins at 9 AM EDT.</p>
-      <p style="margin-top: 1rem; color: var(--text-secondary);">
-        Today is {{ site.time | date: "%A" }}.
-        {% assign dow = site.time | date: "%u" %}
-        {% if dow == "6" or dow == "7" %}Markets are closed on weekends.{% else %}No digest posted yet — check the <a href="{{ '/archive/' | relative_url }}">archive</a> for past digests.{% endif %}
-      </p>
+    <div style="display:flex; gap:8px;">
+      <a href="#" class="btn btn-primary">Today's Digest</a>
+      <a href="{{ '/archive/' | relative_url }}" class="btn btn-hero-outline">Archive</a>
     </div>
   </div>
-{% endif %}
+</div>
+
+<main>
+  {% if entries.size > 0 %}
+    {% for entry in entries reversed %}
+      {{ entry.content | markdownify }}
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <h2>Waiting for the market to open... 🕘</h2>
+      <p style="color: var(--text-secondary);">Digests will appear here once trading begins at 9 AM EDT.</p>
+      <p style="margin-top: 1rem; color: var(--text-muted); font-size: 13px;">Today is {{ site.time | date: "%A" }}. {% assign dow = site.time | date: "%u" %}{% if dow == "6" or dow == "7" %}Markets are closed on weekends.{% endif %}</p>
+    </div>
+  {% endif %}
+</main>

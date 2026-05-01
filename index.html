@@ -5,7 +5,8 @@ permalink: /
 ---
 
 {% assign today = site.time | date: "%Y-%m-%d" %}
-{% assign entries = site.archive | where_exp: "page", "page.date == today" %}
+{% assign archive_pages = site.pages | where_exp: "item", "item.url contains '/archive/'" %}
+{% assign today_page = archive_pages | where_exp: "item", "item.url contains today" | first %}
 
 <div class="entry">
   <div class="entry-header">
@@ -13,16 +14,17 @@ permalink: /
     <span class="entry-meta">NYSE Trading Hours · 9 AM–4 PM EDT</span>
   </div>
 
-  {% if entries.size > 0 %}
-    {% for entry in entries reversed %}
-      {{ entry.content | markdownify }}
-      {% unless forloop.last %}<hr style="border-color: var(--border); margin: 1.5rem 0;">{% endunless %}
-    {% endfor %}
+  {% if today_page %}
+    {{ today_page.content }}
   {% else %}
     <div class="empty-state">
       <h2>Waiting for the market to open... 🕘</h2>
       <p>Digests will appear here once trading begins at 9 AM EDT.</p>
-      <p style="margin-top: 1rem; color: var(--text-secondary);">Today is {{ site.time | date: "%A" }}. {% assign dow = site.time | date: "%u" %}{% if dow == "6" or dow == "7" %}Markets are closed on weekends.{% endif %}</p>
+      <p style="margin-top: 1rem; color: var(--text-secondary);">
+        Today is {{ site.time | date: "%A" }}. 
+        {% assign dow = site.time | date: "%u" %}
+        {% if dow == "6" or dow == "7" %}Markets are closed on weekends.{% else %}No digest posted yet — check the <a href="/market-digest/archive/">archive</a> for past digests.{% endif %}
+      </p>
     </div>
   {% endif %}
 </div>

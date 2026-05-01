@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scenario Trees — Market Digest</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; }
+    #container { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem; }
+    h1 { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.25rem; }
+    h1 span { color: #58a6ff; }
+    .subtitle { color: #8b949e; font-size: 0.85rem; margin-bottom: 1.25rem; }
+    .tree-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .tree-btn {
+      background: #161b22; border: 1px solid #30363d; color: #c9d1d9;
+      padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;
+      font-size: 0.85rem; transition: all 0.15s;
+    }
+    .tree-btn:hover { border-color: #58a6ff; background: #1c2333; }
+    .tree-btn.active { border-color: #58a6ff; background: #1c2333; color: #58a6ff; font-weight: 600; }
+
+    .main-layout {
+      display: flex; gap: 1rem; align-items: flex-start;
+    }
+    #canvas-wrapper {
+      flex: 1; min-width: 0;
+      border: 1px solid #30363d; border-radius: 8px; overflow: hidden;
+      background: #0d1117; position: relative;
+    }
+    #canvas-wrapper canvas {
+      display: block !important;
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    /* ── Node List Sidebar ── */
+    #node-list {
+      width: 340px; flex-shrink: 0;
+      background: #161b22; border: 1px solid #30363d;
+      border-radius: 8px; max-height: 620px; overflow-y: auto;
+      font-size: 0.8rem;
+    }
+    #node-list::-webkit-scrollbar { width: 5px; }
+    #node-list::-webkit-scrollbar-track { background: transparent; }
+    #node-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+    .nl-header {
+      position: sticky; top: 0; background: #161b22; z-index: 1;
+      padding: 0.75rem 0.85rem; border-bottom: 1px solid #30363d;
+      font-weight: 600; font-size: 0.85rem; color: #8b949e;
+    }
+    .nl-item {
+      padding: 0.6rem 0.85rem; border-bottom: 1px solid rgba(48,54,61,0.5);
+      cursor: pointer; transition: background 0.12s;
+    }
+    .nl-item:last-child { border-bottom: none; }
+    .nl-item:hover { background: rgba(88,166,255,0.06); }
+    .nl-item.active { background: rgba(88,166,255,0.1); border-left: 3px solid #58a6ff; padding-left: calc(0.85rem - 3px); }
+    .nl-item .nl-title {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.82rem; font-weight: 500; color: #c9d1d9;
+      margin-bottom: 0.15rem;
+    }
+    .nl-item .nl-indent { margin-left: 0.75rem; }
+    .nl-item .nl-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .nl-item .nl-prob {
+      font-size: 0.9rem; font-weight: 700; margin-right: 0.4rem;
+    }
+    .nl-item .nl-prob.high { color: #3fb950; }
+    .nl-item .nl-prob.med  { color: #d29932; }
+    .nl-item .nl-prob.low  { color: #f85149; }
+    .nl-item .nl-impacts {
+      color: #8b949e; font-size: 0.72rem; line-height: 1.4;
+      margin: 0.2rem 0 0 1.3rem;
+    }
+    .nl-item .nl-impacts strong { color: #8b949e; font-weight: 600; }
+    .nl-item .nl-pm {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 0.68rem; color: #a371f7; margin-left: 1.3rem; margin-top: 0.2rem;
+    }
+    .nl-item .nl-pm-dot {
+      width: 5px; height: 5px; border-radius: 50%; background: #a371f7;
+    }
+
+    .controls { display: flex; gap: 0.75rem; justify-content: center; margin-top: 0.5rem; flex-wrap: wrap; }
+    .controls kbd { background: #161b22; border: 1px solid #30363d; border-radius: 3px; padding: 0.1rem 0.4rem; font-size: 0.7rem; color: #8b949e; }
+    .zoom-indicator {
+      position: absolute; bottom: 8px; right: 10px;
+      color: #8b949e; font-size: 0.7rem;
+      background: rgba(13,17,23,0.7); padding: 2px 7px; border-radius: 4px;
+      pointer-events: none;
+    }
+
+    @media (max-width: 850px) {
+      .main-layout { flex-direction: column; }
+      #node-list { width: 100%; max-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+  <h1><span>◆</span> Scenario Trees</h1>
+  <div class="subtitle">
+    Interactive forecast trees with Polymarket-anchored probabilities ·
+    <kbd style="background:#161b22;border:1px solid #30363d;border-radius:3px;padding:0.1rem 0.4rem;">scroll</kbd> zoom ·
+    <kbd style="background:#161b22;border:1px solid #30363d;border-radius:3px;padding:0.1rem 0.4rem;">drag empty</kbd> pan ·
+    <kbd style="background:#161b22;border:1px solid #30363d;border-radius:3px;padding:0.1rem 0.4rem;">drag node</kbd> rearrange
+  </div>
+  <div class="tree-tabs" id="tree-tabs"></div>
+
+  <div class="main-layout">
+    <div id="canvas-wrapper" style="position:relative">
+      <div class="zoom-indicator" id="zoom-level">100%</div>
+    </div>
+    <div id="node-list">
+      <div class="nl-header">📋 Scenario Nodes</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span><kbd>S</kbd> save PNG</span>
+    <span><kbd>R</kbd> reset view</span>
+    <span style="color:#8b949e"><span style="color:#58a6ff">●</span> Inferred</span>
+    <span style="color:#8b949e"><span style="color:#a371f7">●</span> Polymarket</span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/p5.min.js"></script>
+<script>
+p5.disableFriendlyErrors = true;
+
+// ─────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────
+const TREE_DATA = {
+  "iran-conflict": {
+    label: "🇮🇷 Iran / Middle East Conflict",
+    nodes: [
+      { id:"status-quo", label:"Status quo — low boil", prob:0.35,
+        impact:{ oil:"WTI ~$110-115", cad:"CAD flat (~0.72 USD)", tsx_energy:"TSX Energy +1%",
+                 desc:"Tensions persist without major escalation or resolution" } },
+      { id:"ceasefire", label:"Ceasefire / De-escalation", prob:0.47,
+        impact:{ oil:"WTI retraces to ~$100-105", cad:"CAD +0.5% vs USD", tsx_energy:"TSX Energy -3%",
+                 desc:"Diplomatic resolution or sustained ceasefire" },
+        children:[
+          { id:"full-diplomatic", label:"Full diplomatic resolution", prob:0.3,
+            impact:{ oil:"WTI drops to ~$95-100", cad:"CAD +1%", tsx_energy:"TSX Energy -5%", desc:"Comprehensive agreement" } },
+          { id:"stalled-ceasefire", label:"Ceasefire stalls — cold peace", prob:0.7,
+            impact:{ oil:"WTI ~$105-110", cad:"CAD flat", desc:"Periodic flare-ups" } }
+        ]},
+      { id:"escalation", label:"Escalation / Wider conflict", prob:0.335, pm:"will-the-us-invade-iran-before-2027", volume:18956109.8,
+        impact:{ oil:"WTI surges to $130+", cad:"CAD -2%", tsx_energy:"TSX Energy +5%",
+                 desc:"Ground invasion, Strait of Hormuz disruption, or major strike campaign" },
+        children:[
+          { id:"strait-closure", label:"Strait of Hormuz disruption", prob:0.4,
+            impact:{ oil:"WTI $150+", cad:"CAD -3%", tsx_energy:"TSX Energy +8%", desc:"Naval conflict in Strait" } },
+          { id:"limited-strikes", label:"Limited strike campaign", prob:0.6,
+            impact:{ oil:"WTI ~$120-130", cad:"CAD -1%", tsx_energy:"TSX Energy +3%", desc:"Air/naval strikes without ground invasion" } }
+        ]}
+    ]
+  },
+  "boc-rates": {
+    label: "🏦 Bank of Canada Rates",
+    nodes: [
+      { id:"boc-hold", label:"BoC holds at 2.25% through 2026", prob:0.37,
+        impact:{ cad:"CAD stable", tsx_financials:"Bank margins compressed", desc:"April 29 confirmed this direction" } },
+      { id:"boc-hike", label:"BoC hikes rates in 2026", prob:0.63, pm:"bank-of-canada-rate-hike-in-2026", volume:6499,
+        impact:{ cad:"CAD +1-2%", tsx_financials:"Bank margins expand", desc:"At least one 25bp hike from 2.25%" },
+        children:[
+          { id:"one-hike", label:"One 25bp hike (to 2.50%)", prob:0.65,
+            impact:{ cad:"CAD +0.5%", desc:"June meeting most likely" } },
+          { id:"multiple-hikes", label:"Two or more hikes", prob:0.35,
+            impact:{ cad:"CAD +2%", bonds:"Yields spike 50bp+", desc:"Inflation surprise" } }
+        ]}
+    ]
+  },
+  "fed-rates": {
+    label: "🏛️ Federal Reserve Rates",
+    nodes: [
+      { id:"fed-no-cuts", label:"Zero rate cuts in 2026", prob:0.572, pm:"will-no-fed-rate-cuts-happen-in-2026", volume:3756944.7,
+        impact:{ equities:"S&P 500 range-bound", cad:"CAD under pressure (rate divergence)", desc:"Fed holds at 4.25-4.50%" } },
+      { id:"fed-one-cut", label:"One rate cut in 2026", prob:0.175, pm:"will-1-fed-rate-cuts-happen-in-2026", volume:1129898.5,
+        impact:{ equities:"Modest equity rally", cad:"CAD strengthens slightly", desc:"Late-year cut if inflation cools" } },
+      { id:"fed-two-plus-cuts", label:"Two or more rate cuts", prob:0.125, pm:"will-2-fed-rate-cuts-happen-in-2026", volume:1100438.2,
+        impact:{ equities:"Strong rally, risk-on", cad:"CAD +1.5%+", desc:"Requires recession or sharp inflation drop" } }
+    ]
+  },
+  "trade-tariffs": {
+    label: "🌐 US-Canada Trade & Tariffs",
+    nodes: [
+      { id:"no-trade-deal", label:"No new US-Canada trade deal", prob:0.64,
+        impact:{ cad:"CAD under pressure", tsx:"Exporters face uncertainty", desc:"Ongoing tariff friction" },
+        children:[
+          { id:"tariffs-escalate", label:"Tariffs increase / trade war", prob:0.3,
+            impact:{ cad:"CAD -3%", tsx:"Broad sell-off", desc:"Retaliatory measures" } },
+          { id:"muddling-through", label:"Muddling through — no major change", prob:0.7,
+            impact:{ cad:"CAD flat", tsx:"Sector rotation", desc:"Periodic threats" } }
+        ]},
+      { id:"trade-deal-reached", label:"New US-Canada trade deal", prob:0.415, pm:"us-agrees-to-a-new-trade-deal-with-canada-before-2027", volume:2406.3,
+        impact:{ cad:"CAD +1-2%", tsx:"Broad rally", desc:"Comprehensive trade deal removes uncertainty" } }
+    ]
+  },
+  "recession-risk": {
+    label: "📉 Recession Risk",
+    nodes: [
+      { id:"us-recession", label:"US recession by end of 2026", prob:0.215, pm:"us-recession-by-end-of-2026", volume:1416054.5,
+        impact:{ equities:"S&P 500 -15-20%", cad:"CAD weakens (flight to USD)", desc:"Major risk-off event" } },
+      { id:"canada-recession", label:"Canada recession before 2027", prob:0.195, pm:"canada-recession-before-2027", volume:65455.9,
+        impact:{ tsx:"TSX -10-15%", cad:"CAD -2-3%", housing:"Correction accelerates", desc:"Trade/tariff shock triggered" } }
+    ]
+  },
+  "oil-price": {
+    label: "🛢️ Oil Price Scenarios",
+    nodes: [
+      { id:"oil-100-120", label:"WTI $100-120 (base case)", prob:0.5,
+        impact:{ tsx_energy:"Energy steady", desc:"Iran contained" } },
+      { id:"oil-120-140", label:"WTI $120-140 (upside)", prob:0.3,
+        impact:{ tsx_energy:"Energy +3-5%", cad:"CAD +1%", desc:"Iran escalation" } },
+      { id:"oil-140-plus", label:"WTI $140-150+ (tail risk)", prob:0.15,
+        impact:{ tsx_energy:"Energy +8-10%", desc:"Supply shock" } },
+      { id:"oil-below-100", label:"WTI below $100 (downside)", prob:0.05,
+        impact:{ desc:"Demand weakness + OPEC increase" } }
+    ]
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// GLOBALS
+// ─────────────────────────────────────────────────────
+let currentTree = "iran-conflict";
+let graphNodes = [];
+let graphEdges = [];
+let flatNodes = [];
+let camX = 0, camY = 0, camZoom = 1;
+let isPanning = false, panStartX, panStartY, panStartCamX, panStartCamY;
+let dragNode = null;
+let hoverNode = null, selectedNode = null;
+let tick = 0;
+
+// ── Tabs ──
+for (let [key, tree] of Object.entries(TREE_DATA)) {
+  let btn = document.createElement("button");
+  btn.className = "tree-btn" + (key === currentTree ? " active" : "");
+  btn.textContent = tree.label;
+  btn.onclick = () => switchTree(key);
+  document.getElementById("tree-tabs").appendChild(btn);
+}
+
+function switchTree(key) {
+  currentTree = key;
+  document.querySelectorAll(".tree-btn").forEach((b, i) => {
+    let k = Object.keys(TREE_DATA)[i];
+    b.className = "tree-btn" + (k === key ? " active" : "");
+  });
+  hoverNode = null; selectedNode = null;
+  camX = 0; camY = 0; camZoom = 1;
+  document.getElementById("zoom-level").textContent = "100%";
+  rebuildGraph();
+  renderNodeList();
+}
+
+// ─────────────────────────────────────────────────────
+// GRAPH BUILDER — much wider spacing
+// ─────────────────────────────────────────────────────
+function rebuildGraph() {
+  let tree = TREE_DATA[currentTree];
+  if (!tree) return;
+  graphNodes = [];
+  graphEdges = [];
+  flatNodes = [];
+
+  let maxProb = 0;
+  for (let nd of tree.nodes) if (nd.prob > maxProb) maxProb = nd.prob;
+
+  let cw = Math.max(width * 2.5, 1200);
+  let cx = cw / 2;
+  let cy = height * 0.25;
+
+  function walk(n, parent, depth, idx, siblings) {
+    let node = {
+      id: n.id, label: n.label, prob: n.prob,
+      pm: n.pm || null, volume: n.volume || 0,
+      data: n, hasChildren: n.children && n.children.length > 0,
+      depth: depth,
+      targetX: parent ? parent.targetX : cx + (idx - (siblings - 1) / 2) * (cw / (siblings + 1)) * 0.5,
+      targetY: parent ? parent.targetY + height * 0.38 : cy + depth * (height * 0.38),
+      x: 0, y: 0, vx: 0, vy: 0,
+      radius: map(n.prob, 0.02, maxProb + 0.02, 24, 60),
+    };
+    node.x = node.targetX;
+    node.y = node.targetY;
+    graphNodes.push(node);
+    flatNodes.push(node);
+    if (parent) graphEdges.push({ from: parent, to: node });
+    if (n.children) {
+      for (let ci = 0; ci < n.children.length; ci++) {
+        walk(n.children[ci], node, depth + 1, ci, n.children.length);
+      }
+    }
+  }
+
+  for (let ni = 0; ni < tree.nodes.length; ni++) {
+    walk(tree.nodes[ni], null, 0, ni, tree.nodes.length);
+  }
+
+  // Auto-center camera on nodes
+  if (graphNodes.length > 0) {
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (let n of graphNodes) {
+      if (n.x < minX) minX = n.x;
+      if (n.x > maxX) maxX = n.x;
+      if (n.y < minY) minY = n.y;
+      if (n.y > maxY) maxY = n.y;
+    }
+    let nodeCx = (minX + maxX) / 2;
+    let nodeCy = (minY + maxY) / 2;
+    let nodeW = maxX - minX + 200;
+    let nodeH = maxY - minY + 200;
+    let zoomFit = min(width / nodeW, height / nodeH);
+    camZoom = constrain(zoomFit, 0.25, 2);
+    camX = width / 2 - nodeCx * camZoom;
+    camY = height * 0.1 - nodeCy * camZoom;
+    document.getElementById("zoom-level").textContent = Math.round(camZoom * 100) + "%";
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// p5
+// ─────────────────────────────────────────────────────
+function setup() {
+  let wrap = select("#canvas-wrapper");
+  let w = min(wrap.width, 1000);
+  let h = w * 0.62;
+  createCanvas(w, h).parent("canvas-wrapper");
+  pixelDensity(1);
+  colorMode(RGB, 255);
+  rebuildGraph();
+  renderNodeList();
+}
+
+function draw() {
+  tick++;
+  background(13, 17, 23);
+
+  // Physics
+  let repStrength = 600;
+  for (let i = 0; i < graphNodes.length; i++) {
+    let a = graphNodes[i];
+    if (a === dragNode) continue;
+    for (let j = i + 1; j < graphNodes.length; j++) {
+      let b = graphNodes[j];
+      if (b === dragNode) continue;
+      let dx = a.x - b.x, dy = a.y - b.y;
+      let d = max(sqrt(dx*dx + dy*dy), 1);
+      let f = repStrength / (d * d);
+      a.vx += (dx/d) * f;
+      a.vy += (dy/d) * f;
+      b.vx -= (dx/d) * f;
+      b.vy -= (dy/d) * f;
+    }
+    let dxT = a.targetX - a.x;
+    let dyT = a.targetY - a.y;
+    a.vx += dxT * 0.006;
+    a.vy += dyT * 0.006;
+    a.vx *= 0.9;
+    a.vy *= 0.9;
+    a.x += a.vx;
+    a.y += a.vy;
+  }
+
+  // ── Camera ──
+  push();
+  translate(camX, camY);
+  scale(camZoom);
+
+  // Grid
+  stroke(48, 54, 61, 15);
+  strokeWeight(0.5 / camZoom);
+  let gs = 80;
+  let gmin = -width;
+  let gmax = width * 3;
+  for (let x = gmin; x < gmax; x += gs) line(x, -height, x, height * 3);
+  for (let y = -height; y < height * 3; y += gs) line(gmin, y, gmax, y);
+
+  // Edges
+  noFill();
+  for (let e of graphEdges) {
+    stroke(48, 54, 61, 90);
+    strokeWeight(1.2 / camZoom);
+    line(e.from.x, e.from.y, e.to.x, e.to.y);
+  }
+
+  // Nodes
+  for (let n of graphNodes) {
+    let isHov = n === hoverNode;
+    let isSel = n === selectedNode;
+    let hi = isHov || isSel;
+    let r = n.radius * (hi ? 1.25 : 1);
+    let fade = selectedNode && !hi ? 0.25 : 1;
+
+    // Glow
+    if (hi) {
+      fill(88, 166, 255, 35 * fade);
+      ellipse(n.x, n.y, r * 4);
+    }
+
+    // Outer ring
+    if (n.pm) {
+      fill(163, 113, 247, 180 * fade);
+      ellipse(n.x, n.y, r * 2);
+      fill(13, 17, 23, 200 * fade);
+      ellipse(n.x, n.y, r * 1.6);
+      fill(163, 113, 247, 170 * fade);
+      ellipse(n.x, n.y, r * 1.3);
+    } else {
+      fill(48, 54, 61, 180 * fade);
+      ellipse(n.x, n.y, r * 2);
+      fill(13, 17, 23, 200 * fade);
+      ellipse(n.x, n.y, r * 1.6);
+    }
+
+    // Core
+    let bri = map(n.prob, 0, 0.7, 80, 240);
+    let cc = n.pm ? [163, 113, 247] : [88, 166, 255];
+    fill(cc[0], cc[1], cc[2], min(bri * fade, 240));
+    ellipse(n.x, n.y, r);
+
+    // Probability % — BIGGER
+    textAlign(CENTER, CENTER);
+    fill(255, hi ? 255 : 220 * fade);
+    textSize(hi ? 14 / camZoom : 12 / camZoom);
+    textStyle(BOLD);
+    text(round(n.prob * 100) + "%", n.x, n.y - 3);
+
+    // Label — BIGGER
+    fill(255, hi ? 200 : 120 * fade);
+    textSize(hi ? 10 / camZoom : 9 / camZoom);
+    textStyle(NORMAL);
+    text(n.label, n.x, n.y + r * 0.9 + 10 / camZoom);
+
+    // PM ring
+    if (n.pm) {
+      noFill();
+      stroke(163, 113, 247, 120 * fade);
+      strokeWeight(1 / camZoom);
+      ellipse(n.x, n.y, r * 2.5);
+    }
+  }
+
+  pop();
+
+  document.getElementById("zoom-level").textContent = Math.round(camZoom * 100) + "%";
+}
+
+// ─────────────────────────────────────────────────────
+// NODE LIST — right sidebar
+// ─────────────────────────────────────────────────────
+function renderNodeList() {
+  let el = document.getElementById("node-list");
+  let h = '<div class="nl-header">📋 Scenario Nodes — ' + TREE_DATA[currentTree].label + '</div>';
+  for (let n of flatNodes) {
+    let d = n.data;
+    let indent = n.depth > 0 ? ' nl-indent' : '';
+    let active = n === selectedNode ? ' active' : '';
+    let probClass = n.prob > 0.5 ? 'high' : n.prob > 0.25 ? 'med' : 'low';
+    let dotColor = n.pm ? '#a371f7' : '#58a6ff';
+
+    let impactStr = '';
+    if (d.impact) {
+      let parts = [];
+      for (let [k, v] of Object.entries(d.impact)) {
+        if (k === 'desc') continue;
+        parts.push('<strong>' + k.replace(/_/g, ' ') + ':</strong> ' + v);
+      }
+      if (parts.length) impactStr = '<div class="nl-impacts">' + parts.join(' · ') + '</div>';
+      if (d.impact.desc) impactStr += '<div class="nl-impacts" style="font-style:italic;margin-top:0.05rem">' + d.impact.desc + '</div>';
+    }
+
+    let pmBadge = n.pm
+      ? '<div class="nl-pm"><span class="nl-pm-dot"></span>' + n.pm + ' · $' + (n.volume || 0).toLocaleString() + ' vol</div>'
+      : '';
+
+    let arrow = n.hasChildren ? ' ▸' : '';
+
+    h += '<div class="nl-item' + active + indent + '" data-id="' + n.id + '" onclick="selectFromList(\'' + n.id + '\')">';
+    h += '<div class="nl-title"><span class="nl-dot" style="background:' + dotColor + '"></span>' + n.label + arrow + '</div>';
+    h += '<div><span class="nl-prob ' + probClass + '">' + (n.prob * 100).toFixed(0) + '%</span><span style="color:#8b949e;font-size:0.72rem">' + (n.pm ? ' Polymarket' : ' Inferred') + '</span></div>';
+    h += impactStr + pmBadge;
+    h += '</div>';
+  }
+  el.innerHTML = h;
+}
+
+function selectFromList(id) {
+  let n = flatNodes.find(x => x.id === id);
+  if (n) {
+    if (selectedNode === n) { selectedNode = null; }
+    else { selectedNode = n; }
+    renderNodeList();
+    updateNodeListSelection();
+  }
+}
+
+function updateNodeListSelection() {
+  document.querySelectorAll(".nl-item").forEach(el => {
+    let id = el.dataset.id;
+    if (id && selectedNode && selectedNode.id === id) {
+      el.classList.add("active");
+      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    } else {
+      el.classList.remove("active");
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────
+// CAMERA / MOUSE
+// ─────────────────────────────────────────────────────
+function screenToWorld(sx, sy) {
+  return { x: (sx - camX) / camZoom, y: (sy - camY) / camZoom };
+}
+
+function hitTest(sx, sy) {
+  let w = screenToWorld(sx, sy);
+  let best = null, bestD = 50 / camZoom;
+  for (let n of graphNodes) {
+    let d = dist(w.x, w.y, n.x, n.y);
+    if (d < n.radius + 15 / camZoom && d < bestD) { bestD = d; best = n; }
+  }
+  return best;
+}
+
+function mouseMoved() {
+  let h = hitTest(mouseX, mouseY);
+  if (h !== hoverNode) {
+    hoverNode = h;
+    // Highlight in list
+    document.querySelectorAll(".nl-item").forEach(el => {
+      if (h && el.dataset.id === h.id && el !== selectedNode) {
+        el.style.background = "rgba(88,166,255,0.06)";
+      } else if (!selectedNode || el.dataset.id !== selectedNode.id) {
+        el.style.background = "";
+      }
+    });
+  }
+}
+
+function mousePressed() {
+  let h = hitTest(mouseX, mouseY);
+  if (h) {
+    dragNode = h;
+    isPanning = false;
+    selectedNode = h;
+    renderNodeList();
+  } else {
+    isPanning = true;
+    panStartX = mouseX; panStartY = mouseY;
+    panStartCamX = camX; panStartCamY = camY;
+    selectedNode = null;
+    renderNodeList();
+  }
+}
+
+function mouseDragged() {
+  if (dragNode) {
+    let w = screenToWorld(mouseX, mouseY);
+    dragNode.x = w.x;
+    dragNode.y = w.y;
+  } else if (isPanning) {
+    camX = panStartCamX + (mouseX - panStartX);
+    camY = panStartCamY + (mouseY - panStartY);
+  }
+}
+
+function mouseReleased() {
+  dragNode = null;
+  isPanning = false;
+}
+
+function mouseWheel(event) {
+  let dz = event.delta > 0 ? 0.9 : 1.1;
+  let nz = constrain(camZoom * dz, 0.25, 5);
+  let mx = mouseX, my = mouseY;
+  camX = mx - (mx - camX) * (nz / camZoom);
+  camY = my - (my - camY) * (nz / camZoom);
+  camZoom = nz;
+  return false;
+}
+
+function keyPressed() {
+  if (key === "s" || key === "S") saveCanvas("scenario-tree", "png");
+  if (key === "r" || key === "R") {
+    rebuildGraph();
+    camX = 0; camY = 0; camZoom = 1;
+    selectedNode = null;
+    renderNodeList();
+  }
+}
+
+function windowResized() {
+  let wrap = select("#canvas-wrapper");
+  let w = min(wrap.width, 1000);
+  let h = w * 0.62;
+  resizeCanvas(w, h);
+  rebuildGraph();
+  renderNodeList();
+}
+</script>
+</body>
+</html>

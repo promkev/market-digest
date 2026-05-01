@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Pulse — Market Digest</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d1117;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #container {
+      max-width: 900px;
+      width: 100%;
+      margin: 2rem auto;
+    }
+    h2 {
+      color: #c9d1d9;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 0 1.5rem 0.75rem;;
+    }
+    h2 span { color: #58a6ff; }
+    #canvas-wrapper {
+      position: relative;
+      width: 100%;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0d1117;
+    }
+    #canvas-wrapper canvas {
+      display: block !important;
+      width: 100% !important;
+      height: auto !important;
+    }
+    .info {
+      color: #8b949e;
+      text-align: center;
+      padding: 0.75rem;
+      font-size: 0.75rem;
+    }
+    .info kbd {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 3px;
+      padding: 0.1rem 0.4rem;
+      font-size: 0.7rem;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+  <h2><span>◆</span> Market Pulse</h2>
+  <div id="canvas-wrapper"></div>
+  <div class="info">
+    <kbd>S</kbd> save PNG &nbsp;·&nbsp;
+    <kbd>R</kbd> reseed &nbsp;·&nbsp;
+    <kbd>Click</kbd> shift mood &nbsp;·&nbsp;
+    Hover legend to highlight sectors
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/p5.min.js"></script>
+<script>
+p5.disableFriendlyErrors = true;
+
+// ── RGB colors for background (stored as arrays) ──
+const BG_R = 13, BG_G = 17, BG_B = 23;
+
+// ── Sectors ──
+const SECTORS = [
+  { name:'Technology',     r:88,  g:166, b:255, count:150, speed:0.6 },
+  { name:'Energy',         r:63,  g:185, b:80,  count:120, speed:0.8 },
+  { name:'Oil & Gas',      r:210, g:153, b:50,  count:90,  speed:0.5 },
+  { name:'Interest Rates', r:248, g:81,  b:73,  count:80,  speed:0.4 },
+  { name:'Geopolitics',    r:163, g:113, b:247, count:70,  speed:0.3 },
+  { name:'Canada',         r:200, g:200, b:200, count:45,  speed:0.7 },
+];
+
+// ── Particle class ──
+class Particle {
+  constructor(sector) {
+    this.s = sector;
+    this.reset();
+  }
+  reset() {
+    this.x = random(-60, width + 60);
+    this.y = random(-60, height + 60);
+    this.vx = 0;
+    this.vy = 0;
+    this.age = 0;
+    this.maxAge = int(random(180, 420));
+    this.size = random(1.5, 3.5);
+    this.alpha = random(50, 150);
+  }
+  update(mood) {
+    let f = flowField.lookup(this.x, this.y);
+    let spd = this.s.speed * lerp(0.7, 1.3, mood);
+    this.vx += f.x * 0.14 * spd;
+    this.vy += f.y * 0.14 * spd;
+    this.vx *= 0.93;
+    this.vy *= 0.93;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.age++;
+    if (this.x < -120) this.x = width + 120;
+    if (this.x > width + 120) this.x = -120;
+    if (this.y < -120) this.y = height + 120;
+    if (this.y > height + 120) this.y = -120;
+    if (this.age > this.maxAge) this.reset();
+  }
+}
+
+// ── Flow Field ──
+class FlowField {
+  constructor(res) {
+    this.res = res;
+    this.cols = ceil(width / res) + 2;
+    this.rows = ceil(height / res) + 2;
+    this.vecs = new Array(this.cols * this.rows);
+  }
+  update(zOff) {
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        let a = noise(x * 0.07, y * 0.07, zOff) * TWO_PI * 3.5;
+        let idx = x + y * this.cols;
+        this.vecs[idx] = { x: cos(a), y: sin(a) };
+      }
+    }
+  }
+  lookup(x, y) {
+    let col = floor(x / this.res);
+    let row = floor(y / this.res);
+    col = constrain(col, 0, this.cols - 1);
+    row = constrain(row, 0, this.rows - 1);
+    let v = this.vecs[col + row * this.cols];
+    return v || { x: 0, y: 0.5 };
+  }
+}
+
+// ── Globals ──
+let particles = [];
+let flowField;
+let mood = 0.5;
+let moodTarget = 0.5;
+let hoverSector = -1;
+let seed = 42;
+let tick = 0;
+
+function setup() {
+  let wrap = select('#canvas-wrapper');
+  let w = min(wrap.width, 1000);
+  let h = w * (9 / 16);
+  createCanvas(w, h).parent('canvas-wrapper');
+  pixelDensity(1);
+  randomSeed(seed);
+  noiseSeed(seed);
+
+  colorMode(RGB, 255);
+
+  flowField = new FlowField(20);
+
+  // Create all particles
+  particles = [];
+  for (let s of SECTORS) {
+    for (let i = 0; i < s.count; i++) {
+      particles.push(new Particle(s));
+    }
+  }
+}
+
+function draw() {
+  tick++;
+  // Clear with proper dark bg
+  background(BG_R, BG_G, BG_B);
+
+  // Mood drift
+  if (random() < 0.005) {
+    moodTarget = constrain(mood + random(-0.12, 0.12), 0.12, 0.88);
+  }
+  mood = lerp(mood, moodTarget, 0.012);
+
+  // Update flow
+  flowField.update(tick * 0.0015);
+
+  // Draw grid
+  stroke(48, 54, 61, 20);
+  strokeWeight(0.5);
+  for (let x = 0; x < width; x += 50) line(x, 0, x, height);
+  for (let y = 0; y < height; y += 50) line(0, y, width, y);
+
+  // Draw particles
+  noFill();
+  for (let i = 0; i < particles.length; i++) {
+    let p = particles[i];
+    p.update(mood);
+
+    // Determine alpha with sector highlight
+    let a = p.alpha;
+    if (hoverSector >= 0) {
+      let si = SECTORS.indexOf(p.s);
+      if (si === hoverSector) a = min(a * 2.4, 235);
+      else a = a * 0.18;
+    }
+
+    // Mood → slightly brighter particles
+    let bright = lerp(0.85, 1.0, mood);
+
+    stroke(
+      int(p.s.r * bright),
+      int(p.s.g * bright),
+      int(p.s.b * bright),
+      a
+    );
+    strokeWeight(p.size * lerp(0.8, 1.5, mood));
+    point(p.x, p.y);
+
+    // Trail ghost
+    if (p.age > 4) {
+      stroke(
+        int(p.s.r * bright),
+        int(p.s.g * bright),
+        int(p.s.b * bright),
+        a * 0.15
+      );
+      strokeWeight(p.size * 0.45);
+      point(p.x - p.vx * 3.5, p.y - p.vy * 3.5);
+    }
+  }
+
+  // ── HUD ──
+  push();
+
+  // Sentiment bar (top-right)
+  let barX = width - 140;
+  let barY = 12;
+  fill(255, 100);
+  textAlign(LEFT, TOP);
+  textSize(10);
+  textStyle(NORMAL);
+  noStroke();
+  text('SENTIMENT', barX, barY);
+
+  let bw = 110, bh = 4;
+  let by = barY + 13;
+  fill(48, 54, 61, 140);
+  rect(barX, by, bw, bh, 2);
+  let mc = lerpColor(color(BG_R, BG_G, BG_B), color(63, 185, 80), mood);
+  mc = lerpColor(color(248, 81, 73), mc, mood * 2 > 1 ? 1 : mood * 2);
+  fill(mc);
+  noStroke();
+  rect(barX, by, bw * mood, bh, 2);
+
+  let label = mood < 0.35 ? 'BEARISH' : mood > 0.65 ? 'BULLISH' : 'NEUTRAL';
+  fill(139, 148, 158);
+  textSize(8);
+  text(label, barX + bw + 6, barY);
+
+  // Sector legend (bottom)
+  let ly = height - 20;
+  let lx = 14;
+  for (let i = 0; i < SECTORS.length; i++) {
+    let s = SECTORS[i];
+    let hov = hoverSector === i;
+
+    fill(s.r, s.g, s.b, hov ? 220 : 100);
+    noStroke();
+    circle(lx + 3, ly + 5, hov ? 7 : 4.5);
+
+    fill(255, hov ? 220 : 110);
+    textSize(hov ? 10 : 9);
+    textStyle(hov ? BOLD : NORMAL);
+    textAlign(LEFT, CENTER);
+    text(s.name, lx + 10, ly + 5);
+    lx += textWidth(s.name) + 22;
+  }
+
+  pop();
+
+  // Vignette
+  drawVignette();
+}
+
+function drawVignette() {
+  let cx = width / 2, cy = height / 2;
+  let maxR = dist(0, 0, cx, cy) * 1.2;
+  noStroke();
+  for (let r = maxR; r > maxR * 0.25; r -= 6) {
+    let a = map(r, maxR * 0.25, maxR, 0, 50);
+    fill(BG_R, BG_G, BG_B, a);
+    ellipse(cx, cy, r * 2);
+  }
+}
+
+function mouseMoved() {
+  let ly = height - 20;
+  hoverSector = -1;
+  if (mouseY < ly - 4 || mouseY > ly + 14) return;
+  let lx = 14;
+  for (let i = 0; i < SECTORS.length; i++) {
+    let w = textWidth(SECTORS[i].name) + 22;
+    if (mouseX > lx && mouseX < lx + w) { hoverSector = i; return; }
+    lx += w;
+  }
+}
+
+function mousePressed() {
+  moodTarget = random();
+  // Force mood update
+  mood = lerp(mood, moodTarget, 0.3);
+}
+
+function keyPressed() {
+  if (key === 's' || key === 'S') saveCanvas('market-pulse', 'png');
+  if (key === 'r' || key === 'R') {
+    seed = floor(random(99999));
+    randomSeed(seed);
+    noiseSeed(seed);
+  }
+}
+
+function windowResized() {
+  let wrap = select('#canvas-wrapper');
+  let w = min(wrap.width, 1000);
+  let h = w * (9 / 16);
+  resizeCanvas(w, h);
+  flowField = new FlowField(20);
+}
+</script>
+</body>
+</html>

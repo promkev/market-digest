@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Pulse — p5.js Demo</title>
+  <script>p5.disableFriendlyErrors = true;</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/p5.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d1117;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #canvas-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 2rem auto;
+    }
+    .info {
+      color: #8b949e;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.8rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .info kbd {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 3px;
+      padding: 0.1rem 0.4rem;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div style="width:100%">
+    <div id="canvas-container"></div>
+    <div class="info">
+      Hover sectors to highlight · Press <kbd>s</kbd> to save PNG · <kbd>r</kbd> to reseed
+    </div>
+  </div>
+
+<script>
+// ============================================================
+// MARKET PULSE — Ambient Market Sentiment Visualization
+// ============================================================
+// Uses the market-digest color palette and visual language.
+// Each sector is a colored particle stream flowing through a
+// Perlin noise field. The "market mood" subtly shifts the
+// background pulse and particle behavior.
+// ============================================================
+
+const sketch = (p) => {
+  // --- Color Palette (market-digest dark theme) ---
+  const COLORS = {
+    bg:         '#0d1117',
+    bgCard:     '#161b22',
+    border:     '#30363d',
+    text:       '#c9d1d9',
+    textSec:    '#8b949e',
+    green:      [63, 185, 80],
+    red:        [248, 81, 73],
+    accent:     [88, 166, 255],
+    accentDim:  [31, 111, 235],
+  };
+
+  // --- Sectors ---
+  const SECTORS = [
+    { id: 'tech',     label: 'Technology',    color: [88, 166, 255], baseHue: 210, count: 120, speed: 0.6 },
+    { id: 'energy',   label: 'Energy',        color: [63, 185, 80],  baseHue: 140, count: 100, speed: 0.8 },
+    { id: 'oil',      label: 'Oil & Gas',     color: [210, 153, 50], baseHue: 40,  count: 80,  speed: 0.5 },
+    { id: 'rates',    label: 'Interest Rates',color: [248, 81, 73],  baseHue: 0,   count: 70,  speed: 0.4 },
+    { id: 'geo',      label: 'Geopolitics',   color: [163, 113, 247],baseHue: 270, count: 60,  speed: 0.3 },
+    { id: 'canada',   label: 'Canada',        color: [255, 255, 255],baseHue: 0,   count: 40,  speed: 0.7 },
+  ];
+
+  // --- State ---
+  let particles = [];
+  let flowField;
+  let bgLayer, fgLayer, trailLayer, infoLayer;
+  let time = 0;
+  let marketMood = 0.5; // 0 = bearish, 0.5 = neutral, 1 = bullish
+  let moodTarget = 0.5;
+  let seed = 42;
+  let hoveredSector = -1;
+  let pulsePhase = 0;
+
+  // --- Noise Field ---
+  class FlowField {
+    constructor(res) {
+      this.resolution = res;
+      this.cols = Math.ceil(p.width / res) + 1;
+      this.rows = Math.ceil(p.height / res) + 1;
+      this.vectors = [];
+      this.zOff = 0;
+      this.rebuild();
+    }
+
+    rebuild() {
+      this.vectors = [];
+      for (let y = 0; y < this.rows; y++) {
+        for (let x = 0; x < this.cols; x++) {
+          this.vectors.push(p.createVector(0, 0));
+        }
+      }
+    }
+
+    update(zOff) {
+      this.zOff = zOff;
+      for (let y = 0; y < this.rows; y++) {
+        for (let x = 0; x < this.cols; x++) {
+          let idx = x + y * this.cols;
+          let angle = p.noise(x * 0.08, y * 0.08, zOff) * p.TWO_PI * 2 - p.PI;
+          this.vectors[idx].set(p.cos(angle), p.sin(angle));
+          // Strengthen horizontal flow during bullish mood
+          let moodBias = p.lerp(0.0, 0.3, marketMood);
+          this.vectors[idx].x += moodBias;
+          this.vectors[idx].normalize();
+        }
+      }
+    }
+
+    lookup(x, y) {
+      let col = Math.floor(x / this.resolution);
+      let row = Math.floor(y / this.resolution);
+      col = p.constrain(col, 0, this.cols - 1);
+      row = p.constrain(row, 0, this.rows - 1);
+      return this.vectors[col + row * this.cols];
+    }
+  }
+
+  // --- Particle ---
+  class Particle {
+    constructor(sector) {
+      this.sector = sector;
+      this.reset();
+      this.alpha = p.random(40, 120);
+      this.size = p.random(1.5, 3.5);
+    }
+
+    reset() {
+      this.x = p.random(-50, p.width + 50);
+      this.y = p.random(-50, p.height + 50);
+      this.vx = 0;
+      this.vy = 0;
+      this.life = 0;
+      this.maxLife = p.random(200, 600);
+    }
+
+    update() {
+      let force = flowField.lookup(this.x, this.y);
+      let speedMul = this.sector.speed * p.lerp(0.8, 1.2, marketMood);
+
+      this.vx += force.x * 0.08 * speedMul;
+      this.vy += force.y * 0.08 * speedMul;
+      this.vx *= 0.96;
+      this.vy *= 0.96;
+      this.x += this.vx;
+      this.y += this.vy;
+      this.life++;
+
+      // Wrap around
+      if (this.x < -80) this.x = p.width + 80;
+      if (this.x > p.width + 80) this.x = -80;
+      if (this.y < -80) this.y = p.height + 80;
+      if (this.y > p.height + 80) this.y = -80;
+
+      // Pulse size with market mood
+      this.displaySize = this.size * p.lerp(0.8, 1.4, marketMood);
+    }
+
+    display() {
+      let c = this.sector.color;
+      let a = this.alpha * (0.5 + 0.5 * p.sin(this.life * 0.02));
+
+      // Highlight hovered sector
+      let baseA = a;
+      if (hoveredSector >= 0) {
+        let idx = SECTORS.indexOf(this.sector);
+        if (idx === hoveredSector) {
+          baseA = p.min(baseA * 2.5, 220);
+        } else {
+          baseA = baseA * 0.25;
+        }
+      }
+
+      p.stroke(c[0], c[1], c[2], baseA);
+      p.strokeWeight(this.displaySize);
+      p.point(this.x, this.y);
+
+      // Trail dot
+      if (this.life > 5) {
+        p.stroke(c[0], c[1], c[2], baseA * 0.15);
+        p.strokeWeight(this.displaySize * 0.4);
+        p.point(this.x - this.vx * 3, this.y - this.vy * 3);
+      }
+    }
+  }
+
+  // ============================================================
+  // p5 Lifecycle
+  // ============================================================
+
+  p.setup = function() {
+    let container = document.getElementById('canvas-container');
+    let w = Math.min(container.offsetWidth, 900);
+    let h = Math.min(w * 0.55, 500);
+
+    let cvs = p.createCanvas(w, h);
+    cvs.parent('canvas-container');
+    p.pixelDensity(1);
+    p.colorMode(p.RGB, 255);
+    p.noiseSeed(seed);
+    p.randomSeed(seed);
+
+    // Offscreen buffers
+    bgLayer = p.createGraphics(w, h);
+    fgLayer = p.createGraphics(w, h);
+    trailLayer = p.createGraphics(w, h);
+    infoLayer = p.createGraphics(w, h);
+
+    // Flow field
+    flowField = new FlowField(20);
+
+    // Create particles
+    particles = [];
+    for (let s of SECTORS) {
+      for (let i = 0; i < s.count; i++) {
+        particles.push(new Particle(s));
+      }
+    }
+
+    renderBackground();
+  };
+
+  p.draw = function() {
+    time++;
+
+    // Slowly wander market mood
+    if (time % 120 === 0) {
+      moodTarget = p.constrain(marketMood + p.random(-0.15, 0.15), 0.15, 0.85);
+    }
+    marketMood = p.lerp(marketMood, moodTarget, 0.01);
+    pulsePhase += 0.008;
+
+    // Update flow field
+    flowField.update(time * 0.001);
+
+    // Update particles
+    for (let p of particles) {
+      p.update();
+    }
+
+    // --- Render ---
+    // Background gradient (drawn once, no need to re-clear every frame)
+    p.image(bgLayer, 0, 0);
+
+    // Particles — render directly on main canvas
+    for (let pt of particles) {
+      pt.display();
+    }
+
+    // Info overlay on top
+    renderInfo();
+    p.image(infoLayer, 0, 0);
+
+    // Subtle vignette overlay
+    drawVignette();
+  };
+
+  function renderBackground() {
+    bgLayer.clear();
+    // Gradient background
+    for (let y = 0; y < p.height; y++) {
+      let t = y / p.height;
+      let r = p.lerp(13, 22, t);
+      let g = p.lerp(17, 27, t);
+      let b = p.lerp(23, 34, t);
+      bgLayer.stroke(r, g, b);
+      bgLayer.line(0, y, p.width, y);
+    }
+
+    // Grid
+    bgLayer.stroke(48, 54, 61, 30);
+    bgLayer.strokeWeight(0.5);
+    for (let x = 0; x < p.width; x += 40) {
+      bgLayer.line(x, 0, x, p.height);
+    }
+    for (let y = 0; y < p.height; y += 40) {
+      bgLayer.line(0, y, p.width, y);
+    }
+  }
+
+  function drawVignette() {
+    let cx = p.width / 2;
+    let cy = p.height / 2;
+    let maxDist = p.dist(0, 0, cx, cy);
+    p.noStroke();
+    for (let r = maxDist; r > maxDist * 0.3; r -= 4) {
+      let a = p.map(r, maxDist * 0.3, maxDist, 0, 55);
+      p.fill(13, 17, 23, a);
+      p.ellipse(cx, cy, r * 2);
+    }
+  }
+
+  function renderInfo() {
+    infoLayer.clear();
+
+    // Sector legend bar at bottom
+    let barY = p.height - 28;
+    let barH = 20;
+    let startX = 20;
+    let gap = 12;
+    let x = startX;
+
+    infoLayer.noStroke();
+    infoLayer.rectMode(p.CORNER);
+
+    for (let i = 0; i < SECTORS.length; i++) {
+      let s = SECTORS[i];
+      let isHovered = (hoveredSector === i);
+
+      // Label
+      infoLayer.textFont('system-ui, sans-serif');
+      infoLayer.textSize(isHovered ? 11 : 10);
+      infoLayer.textAlign(p.LEFT, p.CENTER);
+
+      // Colored dot
+      infoLayer.fill(s.color[0], s.color[1], s.color[2], isHovered ? 220 : 140);
+      infoLayer.circle(x + 4, barY + barH / 2, isHovered ? 7 : 5);
+
+      let labelX = x + 10;
+
+      if (isHovered) {
+        infoLayer.fill(255, 255, 255, 220);
+        infoLayer.textStyle(p.BOLD);
+      } else {
+        infoLayer.fill(200, 200, 200, 140);
+        infoLayer.textStyle(p.NORMAL);
+      }
+
+      infoLayer.text(s.label, labelX, barY + barH / 2);
+
+      let textW = infoLayer.textWidth(s.label);
+      x = labelX + textW + gap;
+    }
+
+    // Mood indicator (top-right)
+    let moodX = p.width - 120;
+    let moodY = 15;
+    infoLayer.noStroke();
+    infoLayer.fill(139, 148, 158, 120);
+    infoLayer.textSize(9);
+    infoLayer.textAlign(p.RIGHT, p.TOP);
+    infoLayer.text('MARKET MOOD', moodX + 100, moodY);
+
+    let moodBarW = 100;
+    let moodBarH = 4;
+    let moodBarY = moodY + 14;
+
+    // Background
+    infoLayer.fill(48, 54, 61, 80);
+    infoLayer.rect(moodX, moodBarY, moodBarW, moodBarH, 2);
+
+    // Fill
+    let moodColor = p.lerpColor(
+      p.color(248, 81, 73, 200),
+      p.color(63, 185, 80, 200),
+      marketMood
+    );
+    infoLayer.fill(moodColor);
+    infoLayer.rect(moodX, moodBarY, moodBarW * marketMood, moodBarH, 2);
+
+    // Label
+    let moodLabel = 'Neutral';
+    if (marketMood < 0.35) moodLabel = 'Bearish 📉';
+    else if (marketMood > 0.65) moodLabel = 'Bullish 📈';
+    infoLayer.fill(139, 148, 158, 150);
+    infoLayer.textSize(8);
+    infoLayer.textAlign(p.RIGHT, p.TOP);
+    infoLayer.text(moodLabel, moodX + moodBarW, moodBarY + moodBarH + 3);
+  }
+
+  // ============================================================
+  // Interaction
+  // ============================================================
+
+  p.mouseMoved = function() {
+    // Check if mouse is near legend
+    let barY = p.height - 28;
+    if (p.mouseY > barY - 5 && p.mouseY < barY + 25 && p.mouseX > 0 && p.mouseX < p.width) {
+      let startX = 20;
+      let gap = 12;
+      let x = startX;
+      for (let i = 0; i < SECTORS.length; i++) {
+        let s = SECTORS[i];
+        infoLayer.textSize(10);
+        let textW = infoLayer.textWidth(s.label);
+        let itemW = 10 + textW + gap;
+        if (p.mouseX > x && p.mouseX < x + itemW) {
+          hoveredSector = i;
+          return;
+        }
+        x += itemW;
+      }
+    } else {
+      hoveredSector = -1;
+    }
+  };
+
+  p.mousePressed = function() {
+    // Click to toggle mood
+    moodTarget = p.random();
+  };
+
+  p.keyPressed = function() {
+    if (p.key === 's' || p.key === 'S') {
+      p.saveCanvas('market-pulse', 'png');
+    }
+    if (p.key === 'r' || p.key === 'R') {
+      seed = Math.floor(p.random(99999));
+      p.noiseSeed(seed);
+      p.randomSeed(seed);
+      // Rebuild flow field
+      flowField.rebuild();
+    }
+  };
+
+  p.windowResized = function() {
+    let container = document.getElementById('canvas-container');
+    let w = Math.min(container.offsetWidth, 900);
+    let h = Math.min(w * 0.55, 500);
+    p.resizeCanvas(w, h);
+    bgLayer = p.createGraphics(w, h);
+    fgLayer = p.createGraphics(w, h);
+    trailLayer = p.createGraphics(w, h);
+    infoLayer = p.createGraphics(w, h);
+    flowField.cols = Math.ceil(w / flowField.resolution) + 1;
+    flowField.rows = Math.ceil(h / flowField.resolution) + 1;
+    flowField.vectors = [];
+    renderBackground();
+  };
+};
+
+new p5(sketch, 'canvas-container');
+</script>
+</body>
+</html>

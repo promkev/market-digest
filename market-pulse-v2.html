@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Pulse — Market Digest</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d1117;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #container {
+      max-width: 900px;
+      width: 100%;
+      margin: 2rem auto;
+    }
+    #canvas-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      aspect-ratio: 16 / 9;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #canvas-wrapper canvas {
+      display: block !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .info {
+      color: #8b949e;
+      text-align: center;
+      padding: 0.75rem;
+      font-size: 0.75rem;
+    }
+    .info kbd {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 3px;
+      padding: 0.1rem 0.4rem;
+      font-size: 0.7rem;
+      color: #c9d1d9;
+    }
+    h2 {
+      color: #c9d1d9;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding-top: 1.5rem;
+    }
+    h2 span { color: #58a6ff; }
+  </style>
+</head>
+<body>
+<div id="container">
+  <h2><span>◆</span> Market Pulse</h2>
+  <div id="canvas-wrapper"></div>
+  <div class="info">
+    <kbd>S</kbd> save PNG &nbsp;·&nbsp;
+    <kbd>R</kbd> reseed &nbsp;·&nbsp;
+    <kbd>Click</kbd> shift mood &nbsp;·&nbsp;
+    Hover legend to highlight sectors
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/p5.min.js"></script>
+<script>
+p5.disableFriendlyErrors = true;
+
+// ── Palette (matching market-digest dark theme) ──
+const PAL = {
+  bg:      '#0d1117',
+  card:    '#161b22',
+  border:  '#30363d',
+  green:   '#3fb950',
+  red:     '#f85149',
+  accent:  '#58a6ff',
+  dim:     '#1f6feb',
+  muted:   '#8b949e',
+  text:    '#c9d1d9',
+  purple:  '#a371f7',
+  gold:    '#d29932',
+};
+
+// ── Sectors with particle parameters ──
+const SECTORS = [
+  { name:'Technology',     hex:'#58a6ff', h:210,  n:160, speed:0.6 },
+  { name:'Energy',         hex:'#3fb950', h:140,  n:130, speed:0.8 },
+  { name:'Oil & Gas',      hex:'#d29932', h:40,   n:100, speed:0.5 },
+  { name:'Interest Rates', hex:'#f85149', h:0,    n:90,  speed:0.4 },
+  { name:'Geopolitics',    hex:'#a371f7', h:270,  n:75,  speed:0.3 },
+  { name:'Canada',         hex:'#ffffff', h:0,    n:50,  speed:0.7 },
+];
+
+// ── Particle ──
+class Particle {
+  constructor(s, p5) {
+    this.s = s;
+    this.p5 = p5;
+    this.reset();
+  }
+  reset() {
+    this.x  = random(-60, width + 60);
+    this.y  = random(-60, height + 60);
+    this.vx = 0;
+    this.vy = 0;
+    this.age = 0;
+    this.maxAge = random(180, 400);
+    this.size = random(1.5, 3.2);
+    this.alpha = random(50, 130);
+  }
+  update(mood, hoveredIdx, idx) {
+    let f = flowField.lookup(this.x, this.y);
+    let spd = this.s.speed * lerp(0.75, 1.25, mood);
+    this.vx += f.x * 0.12 * spd;
+    this.vy += f.y * 0.12 * spd;
+    this.vx *= 0.94;
+    this.vy *= 0.94;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.age++;
+    if (this.x < -100) this.x = width + 100;
+    if (this.x > width + 100) this.x = -100;
+    if (this.y < -100) this.y = height + 100;
+    if (this.y > height + 100) this.y = -100;
+    if (this.age > this.maxAge) this.reset();
+  }
+}
+
+// ── Global state ──
+let particles = [];
+let flowField;
+let mood = 0.5;
+let moodTarget = 0.5;
+let hoverSector = -1;
+let seed = 42;
+let t = 0;
+
+// ── Flow field ──
+class FlowField {
+  constructor(res) {
+    this.res = res;
+    this.cols = ceil(width / res) + 2;
+    this.rows = ceil(height / res) + 2;
+    this.vecs = new Array(this.cols * this.rows);
+  }
+  update(zOff) {
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        let a = noise(x * 0.07, y * 0.07, zOff) * TWO_PI * 2;
+        let idx = x + y * this.cols;
+        this.vecs[idx] = { x: cos(a), y: sin(a) };
+      }
+    }
+  }
+  lookup(x, y) {
+    let col = floor(x / this.res);
+    let row = floor(y / this.res);
+    col = constrain(col, 0, this.cols - 1);
+    row = constrain(row, 0, this.rows - 1);
+    return this.vecs[col + row * this.cols] || { x: 0, y: 1 };
+  }
+}
+
+// ── p5 hooks ──
+function setup() {
+  let wrap = select('#canvas-wrapper');
+  let w = wrap.width;
+  let h = wrap.width * (9 / 16);
+  createCanvas(w, h).parent('canvas-wrapper');
+  pixelDensity(1);
+
+  randomSeed(seed);
+  noiseSeed(seed);
+
+  colorMode(HSB, 360, 100, 100, 100);
+
+  flowField = new FlowField(20);
+
+  particles = [];
+  for (let s of SECTORS) {
+    for (let i = 0; i < s.n; i++) {
+      particles.push(new Particle(s));
+    }
+  }
+}
+
+function draw() {
+  t++;
+  background(13, 17, 23, 100);
+
+  // Mood wander
+  if (t % 180 === 0) moodTarget = constrain(mood + random(-0.15, 0.15), 0.1, 0.9);
+  mood = lerp(mood, moodTarget, 0.015);
+
+  // Flow
+  flowField.update(t * 0.0012);
+
+  // Particles
+  let moodHueShift = lerp(0, 20, mood);
+  for (let i = 0; i < particles.length; i++) {
+    let p = particles[i];
+    p.update(mood, hoverSector, i);
+
+    // Color
+    let a = p.alpha;
+    let brightness = lerp(80, 100, mood);
+    let saturation = lerp(60, 90, mood);
+    if (hoverSector >= 0) {
+      let sectorIdx = SECTORS.indexOf(p.s);
+      if (sectorIdx === hoverSector) a = min(a * 2.3, 240);
+      else a *= 0.22;
+    }
+
+    stroke((p.s.h + moodHueShift) % 360, saturation, brightness, a);
+    strokeWeight(p.size * lerp(0.8, 1.5, mood));
+    point(p.x, p.y);
+
+    // Micro trail
+    if (p.age > 3) {
+      stroke((p.s.h + moodHueShift) % 360, saturation, brightness, a * 0.18);
+      strokeWeight(p.size * 0.5);
+      point(p.x - p.vx * 4, p.y - p.vy * 4);
+    }
+  }
+
+  // ── HUD overlay ──
+  drawHUD();
+}
+
+function drawHUD() {
+  push();
+  drawingContext.globalAlpha = 1;
+
+  // Mood bar
+  let mx = width - 160;
+  let my = 14;
+  fill(255, 0, 100, 90);
+  noStroke();
+  textAlign(LEFT, TOP);
+  textSize(10);
+  textStyle(NORMAL);
+  text('SENTIMENT', mx, my);
+
+  let barW = 120;
+  let barH = 5;
+  let barY = my + 14;
+  fill(48, 54, 61, 100); // muted bg
+  rect(mx, barY, barW, barH, 3);
+
+  let moodCol = lerpColor(color(0, 80, 100, 180), color(140, 70, 100, 180), mood);
+  fill(moodCol);
+  noStroke();
+  rect(mx, barY, barW * mood, barH, 3);
+
+  let lbl = mood < 0.35 ? 'BEARISH' : mood > 0.65 ? 'BULLISH' : 'NEUTRAL';
+  fill(255, 0, 100, 70);
+  textSize(8);
+  text(lbl, mx + barW + 5, my);
+
+  // Sector legend
+  let ly = height - 22;
+  let lx = 12;
+  for (let i = 0; i < SECTORS.length; i++) {
+    let s = SECTORS[i];
+    let isHov = hoverSector === i;
+
+    fill(255, 0, isHov ? 100 : 50);
+    noStroke();
+    circle(lx + 3, ly + 5, isHov ? 7 : 4.5);
+
+    fill(255, 0, 100, isHov ? 90 : 50);
+    textSize(isHov ? 10 : 9);
+    textStyle(isHov ? BOLD : NORMAL);
+    textAlign(LEFT, CENTER);
+    text(s.name, lx + 10, ly + 5);
+    lx += textWidth(s.name) + 22;
+  }
+
+  pop();
+}
+
+function mouseMoved() {
+  let ly = height - 22;
+  let lx = 12;
+  hoverSector = -1;
+  if (mouseY < ly - 2 || mouseY > ly + 14) return;
+  for (let i = 0; i < SECTORS.length; i++) {
+    let w = textWidth(SECTORS[i].name) + 22;
+    if (mouseX > lx && mouseX < lx + w) { hoverSector = i; return; }
+    lx += w;
+  }
+}
+
+function mousePressed() {
+  moodTarget = random();
+}
+
+function keyPressed() {
+  if (key === 's' || key === 'S') saveCanvas('market-pulse', 'png');
+  if (key === 'r' || key === 'R') {
+    seed = floor(random(99999));
+    randomSeed(seed);
+    noiseSeed(seed);
+  }
+}
+
+function windowResized() {
+  let wrap = select('#canvas-wrapper');
+  let w = wrap.width;
+  let h = w * (9 / 16);
+  resizeCanvas(w, h);
+  flowField = new FlowField(20);
+}
+</script>
+</body>
+</html>

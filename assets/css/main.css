@@ -257,6 +257,32 @@ footer a { color: var(--accent); }
   font-style: italic;
 }
 
+/* Tables (Prediction Markets) */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+th {
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.3);
+  font-size: 0.9rem;
+}
+
+td.up { color: var(--green); }
+td.down { color: var(--red); }
+
 @media (max-width: 600px) {
   header { padding: 1rem; }
   .odds { flex-direction: column; }

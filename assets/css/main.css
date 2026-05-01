@@ -320,6 +320,99 @@ footer a { color: var(--accent); }
 .analysis-line .negative { color: var(--red); }
 .analysis-line .neutral { color: var(--text-secondary); }
 
+/* Scenario Map */
+.scenario-section {
+  margin-top: 1rem;
+}
+
+.scenario-section h2 {
+  border-bottom-color: var(--accent-dim);
+  color: #d2a8ff;
+  margin-top: 0;
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.scenario-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.scenario-card h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.scenario-card.short-term h3 { color: var(--accent); }
+.scenario-card.long-term h3 { color: #d2a8ff; }
+
+.scenario-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.2);
+  font-size: 0.85rem;
+}
+
+.scenario-row:last-child { border-bottom: none; }
+
+.scenario-row .outcome-label {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.scenario-row .prob {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}
+
+.scenario-row .prob.high { color: var(--green); }
+.scenario-row .prob.medium { color: var(--accent); }
+.scenario-row .prob.low { color: var(--text-secondary); }
+
+.scenario-impact {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  padding: 0.3rem 0 0 1rem;
+}
+
+.scenario-impact .pos { color: var(--green); }
+.scenario-impact .neg { color: var(--red); }
+
+.scenario-takeaway {
+  grid-column: 1 / -1;
+  background: rgba(210, 168, 255, 0.08);
+  border: 1px solid rgba(210, 168, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.scenario-takeaway .label {
+  font-weight: 600;
+  color: #d2a8ff;
+}
+
+@media (max-width: 600px) {
+  .scenario-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Tables (Prediction Markets) */
 table {
   width: 100%;

@@ -4,8 +4,8 @@ title: Today's Digest
 permalink: /
 ---
 
-{% assign today = site.time | date: "%Y-%m-%d" %}
-{% assign entries = site.archive | where_exp: "page", "page.date == today" %}
+{% assign today_key = site.time | date: "%Y-%m-%d" %}
+{% assign entries = site.data.digests[today_key] %}
 
 <div class="hero-bar">
   <div class="hero-inner">
@@ -21,9 +21,19 @@ permalink: /
 </div>
 
 <main>
-  {% if entries.size > 0 %}
+  {% if entries %}
     {% for entry in entries reversed %}
-      {{ entry.content | markdownify }}
+      {% include digest-entry.html
+         time=entry.time
+         date=entry.date
+         trading=entry.post_market
+         canadian_markets=entry.canadian_markets
+         us_global_markets=entry.us_global_markets
+         prediction_markets=entry.prediction_markets
+         market_snapshot=entry.market_snapshot
+         analysis=entry.analysis
+         scenarios=entry.scenarios
+      %}
     {% endfor %}
   {% else %}
     <div class="empty-state">

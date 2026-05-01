@@ -18,7 +18,7 @@ permalink: /archive/
 </div>
 
 <main>
-  {% assign entries = site.pages | where_exp: "item", "item.url contains '/archive/'" %}
+  {% assign entries = site.pages | where_exp: "item", "item.url contains '/archive/' and item.url != '/archive/'" %}
 
   {% assign entries_len = entries | size %}
   {% if entries_len > 0 %}

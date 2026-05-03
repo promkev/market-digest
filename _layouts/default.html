@@ -7,7 +7,7 @@
   <!-- Blocking theme script — prevents white flash -->
   <script>
     (function() {
-      var saved = localStorage.getItem('market-digest-theme');
+      var saved = localStorage.getItem('marketpulse-theme');
       if (saved) {
         document.documentElement.setAttribute('data-theme', saved);
       } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -62,7 +62,7 @@
         var next = current === 'light' ? 'dark' : 'light';
         html.setAttribute('data-theme', next);
         icon.textContent = next === 'dark' ? '🌙' : '☀️';
-        localStorage.setItem('market-digest-theme', next);
+        localStorage.setItem('marketpulse-theme', next);
       });
 
       // Live badge (trading hours check)

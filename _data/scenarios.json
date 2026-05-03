@@ -1,0 +1,49 @@
+{
+  "title": "Strait of Hormuz",
+  "branches": [
+    {
+      "label": "IRGC intercepts commercial tanker",
+      "severity": "red",
+      "probability_pct": 12,
+      "brent_projection": 94
+    },
+    {
+      "label": "US Navy escorts flagged vessels",
+      "severity": "yellow",
+      "probability_pct": 38,
+      "brent_projection": 89,
+      "sub_branches": [
+        {
+          "label": "No escalation after 72h",
+          "severity": "green",
+          "probability_pct": 60,
+          "is_conditional": true
+        },
+        {
+          "label": "IRGC fires warning shots",
+          "severity": "red",
+          "probability_pct": 25,
+          "is_conditional": true
+        },
+        {
+          "label": "Full engagement — US destroyer targeted",
+          "severity": "red",
+          "probability_pct": 15,
+          "is_conditional": true,
+          "brent_projection": 110
+        }
+      ]
+    },
+    {
+      "label": "De-escalation via Oman backchannel",
+      "severity": "green",
+      "probability_pct": 42,
+      "brent_projection": 84
+    },
+    {
+      "label": "Status quo — patrols continue",
+      "severity": "neutral",
+      "probability_pct": 8
+    }
+  ]
+}

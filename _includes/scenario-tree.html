@@ -1,0 +1,74 @@
+{% comment %}
+  _includes/scenario-tree.html
+  Reusable Liquid template for CSS-only branching scenario tree.
+  Reads from _data/scenarios.json.
+  Dependencies: .card, .card-header, .scenario-node, .scenario-label, .scenario-prob
+  Theme-agnostic — uses CSS custom properties only.
+{% endcomment %}
+
+{% assign scenario_data = site.data.scenarios %}
+
+{% if scenario_data and scenario_data.branches and scenario_data.branches.size > 0 %}
+  <div class="card scenario-card">
+    <div class="card-header">
+      Scenario Tree{% if scenario_data.title %} · <span class="accent">{{ scenario_data.title }}</span>{% endif %}
+    </div>
+
+    {% for branch in scenario_data.branches %}
+      {% comment %} --- Severity emoji mapping --- {% endcomment %}
+      {% if branch.severity == "red" %}
+        {% assign sev_emoji = "🔴" %}
+      {% elsif branch.severity == "yellow" %}
+        {% assign sev_emoji = "🟡" %}
+      {% elsif branch.severity == "green" %}
+        {% assign sev_emoji = "🟢" %}
+      {% else %}
+        {% assign sev_emoji = "⚪" %}
+      {% endif %}
+
+      {% comment %} --- Root node: accent border, no left margin, no connector pseudo --- {% endcomment %}
+      <div class="scenario-node{% if forloop.first %} scenario-root{% endif %}">
+        <div class="scenario-label">{{ sev_emoji }} {{ branch.label }}</div>
+        <div class="scenario-prob">
+          Probability: {{ branch.probability_pct }}%
+          {% if branch.brent_projection %} · Brent → ${{ branch.brent_projection }}{% endif %}
+        </div>
+
+        {% comment %} --- Level 2: Sub-branches --- {% endcomment %}
+        {% if branch.sub_branches and branch.sub_branches.size > 0 %}
+          {% for sub in branch.sub_branches %}
+            {% if sub.severity == "red" %}
+              {% assign sub_emoji = "🔴" %}
+            {% elsif sub.severity == "yellow" %}
+              {% assign sub_emoji = "🟡" %}
+            {% elsif sub.severity == "green" %}
+              {% assign sub_emoji = "🟢" %}
+            {% else %}
+              {% assign sub_emoji = "⚪" %}
+            {% endif %}
+            <div class="scenario-node scenario-sub">
+              <div class="scenario-label">{{ sub_emoji }} {{ sub.label }}</div>
+              <div class="scenario-prob">
+                {% if sub.is_conditional %}
+                  Probability: {{ sub.probability_pct }}% of this branch
+                {% else %}
+                  Probability: {{ sub.probability_pct }}%
+                {% endif %}
+                {% if sub.brent_projection %} · Brent → ${{ sub.brent_projection }}{% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  {% comment %} --- Empty state: no scenario data --- {% endcomment %}
+  <div class="card scenario-card">
+    <div class="card-header">Scenario Tree</div>
+    <div class="scenario-empty">
+      <div class="scenario-empty-icon">🌳</div>
+      <div class="scenario-empty-text">No active scenarios — check back during trading hours</div>
+    </div>
+  </div>
+{% endif %}

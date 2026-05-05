@@ -1,168 +1,688 @@
 ---
-layout: default
-title: Today's Digest
-permalink: /
+layout: none
 ---
+
+{% comment %}
+  Today Tab — MarketPulse 3-column card grid
+  Self-contained: inline OKLCH green CSS + Liquid data binding
+  Dependencies: _data/digests.json, _data/scenarios.json
+{% endcomment %}
 
 {% assign today_key = site.time | date: "%Y-%m-%d" %}
 {% assign entries = site.data.digests[today_key] %}
-{% assign is_fallback = false %}
-{% assign fallback_date = "" %}
 
-{% comment %}
-  Weekend/holiday fallback: if today has no digest data, serve the most
-  recent available digest so the dashboard is testable and useful 24/7.
-{% endcomment %}
-{% unless entries and entries.size > 0 %}
-  {% for hash_entry in site.data.digests %}
-    {% assign date_key = hash_entry[0] %}
-    {% if date_key > fallback_date and hash_entry[1].size > 0 %}
-      {% assign fallback_date = date_key %}
-      {% assign entries = hash_entry[1] %}
-      {% assign is_fallback = true %}
-    {% endif %}
-  {% endfor %}
-{% endunless %}
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <script>
+    (function() {
+      var t = localStorage.getItem('marketpulse-theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+      else if (matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MarketPulse — Financial Intelligence Dashboard</title>
+  <style>
+    :root {
+      --bg:      oklch(98% 0.005 250);
+      --surface: oklch(100% 0 0);
+      --fg:      oklch(22% 0.02 240);
+      --muted:   oklch(50% 0.018 240);
+      --border:  oklch(90% 0.008 240);
+      --accent:  oklch(58% 0.16 145);
+      --accent-soft:  oklch(90% 0.06 145);
+      --warn:    oklch(62% 0.16 65);
+      --danger:  oklch(55% 0.18 25);
+      --green:   oklch(55% 0.14 155);
+      --blue:    oklch(58% 0.15 255);
 
-{% comment %}Format fallback date for display{% endcomment %}
-{% if is_fallback %}
-  {% assign fb_parts = fallback_date | split: "-" %}
-  {% assign fb_year = fb_parts[0] %}
-  {% assign fb_month = fb_parts[1] | plus: 0 %}
-  {% assign fb_day = fb_parts[2] | plus: 0 %}
-  {% case fb_month %}
-    {% when 1 %}{% assign fb_month_name = "January" %}
-    {% when 2 %}{% assign fb_month_name = "February" %}
-    {% when 3 %}{% assign fb_month_name = "March" %}
-    {% when 4 %}{% assign fb_month_name = "April" %}
-    {% when 5 %}{% assign fb_month_name = "May" %}
-    {% when 6 %}{% assign fb_month_name = "June" %}
-    {% when 7 %}{% assign fb_month_name = "July" %}
-    {% when 8 %}{% assign fb_month_name = "August" %}
-    {% when 9 %}{% assign fb_month_name = "September" %}
-    {% when 10 %}{% assign fb_month_name = "October" %}
-    {% when 11 %}{% assign fb_month_name = "November" %}
-    {% when 12 %}{% assign fb_month_name = "December" %}
-  {% endcase %}
-{% endif %}
+      --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body:    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
 
-<div class="hero-bar">
-  <div class="hero-inner">
-    <div class="hero-info">
-      <h2 id="heroDate">{{ site.time | date: "%A, %B %-d, %Y" }}</h2>
-      <div class="hero-meta" id="heroMeta">
-        {% if is_fallback %}
-          📊 Showing most recent digest from {{ fb_month_name }} {{ fb_day }}, {{ fb_year }} · Markets closed
-        {% else %}
-          NYSE Trading Hours · 9 AM–4 PM EDT · Next update: {{ site.time | date: "%l %p" | strip }} hourly
-        {% endif %}
-      </div>
-    </div>
-    <div style="display:flex; gap:8px;">
-      <a href="#" class="btn btn-primary">Today's Digest</a>
-      <a href="{{ '/archive/' | relative_url }}" class="btn btn-hero-outline">Archive</a>
-    </div>
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 10px;
+      --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.04);
+    }
+    [data-theme="dark"] {
+      --bg:      oklch(14% 0.015 240);
+      --surface: oklch(18% 0.012 240);
+      --fg:      oklch(90% 0.006 250);
+      --muted:   oklch(62% 0.015 240);
+      --border:  oklch(28% 0.012 240);
+      --accent-soft: oklch(28% 0.08 145);
+      --shadow-sm: 0 1px 3px oklch(0% 0 0 / 0.2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg); color: var(--fg);
+      min-height: 100vh; display: flex; flex-direction: column;
+      font-size: 14px; line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .shell {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 48px;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(12px);
+      background: oklch(from var(--surface) l c h / 0.92);
+    }
+    .brand { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: -0.01em; color: var(--fg); }
+    .brand span { color: var(--accent); }
+    .tabs { display: flex; gap: 2px; }
+    .tab {
+      padding: 12px 20px; font-size: 13px; font-weight: 500;
+      font-family: var(--font-body); color: var(--muted);
+      background: none; border: none; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s; letter-spacing: 0.01em;
+    }
+    .tab:hover { color: var(--fg); }
+    .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
+    .tab-count {
+      font-family: var(--font-mono); font-size: 10px;
+      background: var(--border); color: var(--muted);
+      padding: 1px 6px; border-radius: 99px; margin-left: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .shell-right { display: flex; align-items: center; gap: 12px; }
+    .theme-toggle {
+      width: 32px; height: 32px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--surface);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: var(--muted);
+    }
+    .theme-toggle:hover { color: var(--fg); border-color: var(--fg); }
+    .live-dot {
+      display: inline-block; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--accent); margin-right: 5px;
+      animation: pulse 1.8s ease infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .refresh-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+
+    .content { flex: 1; padding: 20px 24px 40px; overflow-y: auto; max-width: 1520px; margin: 0 auto; width: 100%; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-header {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); margin-bottom: 10px; font-weight: 600;
+      font-family: var(--font-body);
+    }
+    .card-header .accent { color: var(--accent); }
+
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .accent { color: var(--accent); }
+    .up { color: var(--green); }
+    .down { color: var(--danger); }
+    .delta { font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .pill {
+      font-family: var(--font-mono); font-size: 10px; padding: 2px 8px;
+      border-radius: 99px; font-weight: 500; letter-spacing: 0.02em;
+    }
+    .pill-green { background: oklch(from var(--green) l c h / 0.12); color: var(--green); }
+    .pill-red   { background: oklch(from var(--danger) l c h / 0.12); color: var(--danger); }
+    .pill-blue  { background: oklch(from var(--blue) l c h / 0.12); color: var(--blue); }
+    .pill-muted { background: oklch(from var(--muted) l c h / 0.10); color: var(--muted); }
+
+    .today-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+    }
+    @media (max-width: 1100px) { .today-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 720px)  { .today-grid { grid-template-columns: 1fr; } }
+    .col { display: flex; flex-direction: column; gap: 16px; }
+
+    .time-selector { display: flex; gap: 4px; margin-bottom: 8px; }
+    .time-slot {
+      flex: 1; padding: 5px 4px; font-family: var(--font-mono);
+      font-size: 10px; background: none; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); cursor: pointer;
+      color: var(--muted); text-align: center; letter-spacing: 0.02em;
+      transition: all 0.15s;
+    }
+    .time-slot:hover { border-color: var(--muted); color: var(--fg); }
+    .time-slot.active {
+      border-color: var(--green); color: var(--fg);
+      background: oklch(from var(--green) l c h / 0.08);
+    }
+    .time-slot.no-data { opacity: 0.35; cursor: not-allowed; }
+
+    .digest-container { min-height: 200px; }
+    .digest-item {
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .digest-item:last-child { border-bottom: none; }
+    .digest-time {
+      font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+      min-width: 40px; text-align: right; flex-shrink: 0;
+    }
+    .digest-headline { font-size: 13px; line-height: 1.55; flex: 1; }
+    .digest-headline a { color: var(--fg); text-decoration: none; }
+    .digest-headline a:hover { color: var(--accent); }
+    .digest-tag {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 1px 5px; border-radius: 3px; flex-shrink: 0;
+    }
+    .digest-empty {
+      text-align: center; padding: 40px 20px;
+      color: var(--muted); font-size: 13px; font-style: italic;
+    }
+
+    .ai-box { position: relative; }
+    .ai-box::before {
+      content: "AI"; position: absolute; top: 8px; right: 10px;
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.08em; color: var(--accent); opacity: 0.7;
+    }
+    .ai-text { font-size: 13px; line-height: 1.6; padding-right: 32px; }
+    .ai-text strong { color: var(--fg); }
+
+    .odds-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px; line-height: 1.5; gap: 8px;
+    }
+    .odds-row:last-child { border-bottom: none; }
+    .odds-label { flex: 1; min-width: 0; }
+    .odds-bar-bg {
+      width: 68px; height: 6px; border-radius: 99px;
+      background: var(--border); overflow: hidden; flex-shrink: 0;
+    }
+    .odds-bar-fg {
+      height: 100%; border-radius: 99px; background: var(--accent);
+      transition: width 0.35s ease;
+    }
+    .odds-pct {
+      font-family: var(--font-mono); font-size: 12px;
+      width: 44px; text-align: right; font-variant-numeric: tabular-nums;
+    }
+
+    .snap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .snap-item {
+      text-align: center; padding: 8px 4px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      transition: background 0.15s;
+    }
+    .snap-item:hover { background: var(--border); }
+    .snap-ticker {
+      font-family: var(--font-mono); font-size: 10px;
+      color: var(--muted); letter-spacing: 0.04em; margin-bottom: 3px;
+    }
+    .snap-value {
+      font-family: var(--font-mono); font-size: 16px;
+      font-weight: 600; font-variant-numeric: tabular-nums;
+    }
+    .snap-delta {
+      font-family: var(--font-mono); font-size: 11px;
+      margin-top: 2px; font-variant-numeric: tabular-nums;
+    }
+
+    .scenario-root { border-left-color: var(--accent) !important; margin-left: 0; }
+    .scenario-node {
+      padding: 8px 10px; border-left: 2px solid var(--border);
+      margin-left: 12px; margin-bottom: 4px; font-size: 12px;
+      position: relative;
+    }
+    .scenario-node::before {
+      content: ""; position: absolute; left: -6px; top: 14px;
+      width: 10px; height: 2px; background: var(--border);
+    }
+    .scenario-root::before { display: none; }
+    .scenario-node:last-child { border-left-color: transparent; }
+    .scenario-label { font-weight: 600; margin-bottom: 2px; font-size: 11.5px; }
+    .scenario-prob { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+    .scenario-sub { margin-left: 20px; }
+    .scenario-empty {
+      text-align: center; padding: 30px 20px;
+      color: var(--muted); font-size: 13px; font-style: italic;
+    }
+    .scenario-empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .panel.active .card { animation: fadeSlideIn 0.35s ease-out backwards; }
+    .panel.active .card:nth-child(1)  { animation-delay: 0.03s; }
+    .panel.active .card:nth-child(2)  { animation-delay: 0.06s; }
+    .panel.active .card:nth-child(3)  { animation-delay: 0.09s; }
+    .panel.active .card:nth-child(4)  { animation-delay: 0.12s; }
+    .panel.active .card:nth-child(5)  { animation-delay: 0.15s; }
+    .panel.active .card:nth-child(6)  { animation-delay: 0.18s; }
+    .panel.active .card:nth-child(7)  { animation-delay: 0.21s; }
+    .panel.active .card:nth-child(8)  { animation-delay: 0.24s; }
+    .panel.active .card:nth-child(9)  { animation-delay: 0.27s; }
+    .panel.active .card:nth-child(10) { animation-delay: 0.30s; }
+
+    @media (max-width: 600px) {
+      .tab { padding: 10px 12px; font-size: 12px; }
+      .tab-count { display: none; }
+      .shell { padding: 0 12px; }
+      .content { padding: 14px 12px 32px; }
+      .scenario-sub { margin-left: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="brand">Market<span>Pulse</span></div>
+  <div class="tabs">
+    <button class="tab active" data-panel="today">Today<span class="tab-count">{% if entries %}{{ entries.size }}{% else %}0{% endif %}</span></button>
+    <button class="tab" data-panel="stories">Stories<span class="tab-count">--</span></button>
+    <button class="tab" data-panel="archive">Archive<span class="tab-count">--</span></button>
+  </div>
+  <div class="shell-right">
+    <span class="refresh-label"><span class="live-dot"></span>Live</span>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">◐</button>
   </div>
 </div>
 
-<main>
-  {% if entries and entries.size > 0 %}
-    <!-- ⏱ Digest Time Selector -->
-    <div class="digest-selector" id="digestSelector">
-      {% for entry in entries reversed %}
-        {% capture short_time %}{{ entry.time | remove: " EDT" | remove: " EST" }}{% endcapture %}
-        {% if entry.post_market %}
-          {% capture label %}{{ short_time }} · Post-Market{% endcapture %}
+<div class="content">
+
+{% if entries and entries.size > 0 %}
+  {% assign latest = entries | first %}
+
+  <div class="panel active" id="panel-today">
+    <div class="today-grid">
+
+      <!-- ═════════ COLUMN 1: Hourly Digest + AI Analysis ═════════ -->
+      <div class="col">
+        <div class="card">
+          <div class="card-header">Hourly Digest · <span class="accent">{{ today_key | date: "%B %-d, %Y" }}</span></div>
+          <div class="time-selector" id="timeSelector">
+            <button class="time-slot" data-hour="9">9AM</button>
+            <button class="time-slot" data-hour="10">10AM</button>
+            <button class="time-slot" data-hour="11">11AM</button>
+            <button class="time-slot" data-hour="12">12PM</button>
+            <button class="time-slot" data-hour="13">1PM</button>
+            <button class="time-slot" data-hour="14">2PM</button>
+            <button class="time-slot" data-hour="15">3PM</button>
+            <button class="time-slot" data-hour="16">4PM</button>
+          </div>
+          <div class="digest-container" id="digestContainer">
+            {% assign all_stories = latest.canadian_markets | concat: latest.us_global_markets %}
+            {% if all_stories.size > 0 %}
+              {% for story in all_stories %}
+              <div class="digest-item">
+                <span class="digest-time">{{ latest.time | remove: " EDT" | remove: " EST" | truncate: 5, "" }}</span>
+                <span class="digest-headline">
+                  {% if story.url and story.url != "" %}<a href="{{ story.url }}" target="_blank" rel="noopener">{{ story.title }}</a>{% else %}{{ story.title }}{% endif %}
+                  {% if story.source %}<span style="color:var(--muted);font-size:11px;display:block;margin-top:2px">{{ story.source }}{% if story.date %} · {{ story.date }}{% endif %}</span>{% endif %}
+                </span>
+                {% if story.tags.size > 0 %}<span class="digest-tag pill-muted">{{ story.tags | first }}</span>{% endif %}
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="digest-empty">No stories available for this hour</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card ai-box">
+          <div class="card-header">AI Analysis · <span class="accent" id="analysisTime">{{ latest.time | remove: " EDT" | remove: " EST" }} snapshot</span></div>
+          <div class="ai-text" id="analysisContent">
+            {% assign ana = latest.analysis %}
+            {% if ana %}
+              {% if ana.theme %}<p><strong>Dominant narrative:</strong> {{ ana.theme }}</p>{% endif %}
+              {% if ana.cad_angle %}<p style="margin-top:8px"><strong>Canadian angle:</strong> {{ ana.cad_angle }}</p>{% endif %}
+              {% if ana.risk_factor %}<p style="margin-top:8px"><strong>Risk factor:</strong> {{ ana.risk_factor }}</p>{% endif %}
+              {% if ana.polymarket_signal %}<p style="margin-top:8px"><strong>Polymarket signal:</strong> {{ ana.polymarket_signal }}</p>{% endif %}
+            {% else %}
+              <p><em>No analysis available for this time slot.</em></p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════ COLUMN 2: Polymarket + Story Cards ═════════ -->
+      <div class="col">
+        <div class="card">
+          <div class="card-header">Polymarket Odds · <span class="accent">live</span></div>
+          <div id="oddsContainer">
+            {% assign pm = latest.prediction_markets %}
+            {% if pm and pm.size > 0 %}
+              {% for m in pm %}
+                {% assign pct_num = m.yes_pct | remove: "%" | plus: 0 %}
+                <div class="odds-row">
+                  <span class="odds-label">{{ m.market }}</span>
+                  <div class="odds-bar-bg"><div class="odds-bar-fg" style="width:{{ pct_num }}%"></div></div>
+                  <span class="odds-pct">{{ m.yes_pct }}</span>
+                  {% if m.delta %}
+                    <span class="delta{% if m.delta contains '+' %} up{% elsif m.delta contains '-' %} down{% endif %}">{{ m.delta }}</span>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="digest-empty">No Polymarket data available</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Canada · <span class="accent">top stories</span></div>
+          {% assign ca = latest.canadian_markets %}
+          {% if ca and ca.size > 0 %}
+            {% for story in ca %}
+            <div class="digest-item">
+              <span class="digest-headline" style="flex:1">
+                {% if story.url and story.url != "" %}<a href="{{ story.url }}" target="_blank" rel="noopener">{{ story.title }}</a>{% else %}{{ story.title }}{% endif %}
+                {% if story.source %}<span style="color:var(--muted);font-size:11px;display:block;margin-top:2px">{{ story.source }}{% if story.date %} · {{ story.date }}{% endif %}</span>{% endif %}
+              </span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="digest-empty">No Canadian stories available</div>
+          {% endif %}
+        </div>
+
+        <div class="card">
+          <div class="card-header">US Markets · <span class="accent">top stories</span></div>
+          {% assign us = latest.us_global_markets %}
+          {% if us and us.size > 0 %}
+            {% for story in us %}
+            <div class="digest-item">
+              <span class="digest-headline" style="flex:1">
+                {% if story.url and story.url != "" %}<a href="{{ story.url }}" target="_blank" rel="noopener">{{ story.title }}</a>{% else %}{{ story.title }}{% endif %}
+                {% if story.source %}<span style="color:var(--muted);font-size:11px;display:block;margin-top:2px">{{ story.source }}{% if story.date %} · {{ story.date }}{% endif %}</span>{% endif %}
+              </span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="digest-empty">No US stories available</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ═════════ COLUMN 3: Market Snapshots + Scenario Tree ═════════ -->
+      <div class="col">
+        <div class="card">
+          <div class="card-header">Market Snapshots · <span class="accent" id="snapshotTime">{{ latest.time | remove: " EDT" | remove: " EST" }}</span></div>
+          <div class="snap-grid" id="snapshotGrid">
+            {% assign ms = latest.market_snapshot %}
+            {% if ms %}
+              {% if ms.sp_500 %}
+              <div class="snap-item"><div class="snap-ticker">S&P 500</div><div class="snap-value">{{ ms.sp_500.value }}</div><div class="snap-delta {{ ms.sp_500.direction }}">{{ ms.sp_500.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">S&P 500</div><div class="snap-value">--</div></div>{% endif %}
+
+              {% if ms.nasdaq %}
+              <div class="snap-item"><div class="snap-ticker">NASDAQ</div><div class="snap-value">{{ ms.nasdaq.value }}</div><div class="snap-delta {{ ms.nasdaq.direction }}">{{ ms.nasdaq.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">NASDAQ</div><div class="snap-value">--</div></div>{% endif %}
+
+              {% if ms.vix %}
+              <div class="snap-item"><div class="snap-ticker">VIX</div><div class="snap-value">{{ ms.vix.value }}</div><div class="snap-delta {{ ms.vix.direction }}">{{ ms.vix.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">VIX</div><div class="snap-value">--</div></div>{% endif %}
+
+              {% if ms.ten_year_yield %}
+              <div class="snap-item"><div class="snap-ticker">US 10Y</div><div class="snap-value">{{ ms.ten_year_yield.value }}</div><div class="snap-delta {{ ms.ten_year_yield.direction }}">{{ ms.ten_year_yield.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">US 10Y</div><div class="snap-value">--</div></div>{% endif %}
+
+              {% if ms.us_2y %}
+              <div class="snap-item"><div class="snap-ticker">US 2Y</div><div class="snap-value">{{ ms.us_2y.value }}</div><div class="snap-delta {{ ms.us_2y.direction }}">{{ ms.us_2y.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">US 2Y</div><div class="snap-value">--</div></div>{% endif %}
+
+              {% if ms.dxy %}
+              <div class="snap-item"><div class="snap-ticker">DXY</div><div class="snap-value">{{ ms.dxy.value }}</div><div class="snap-delta {{ ms.dxy.direction }}">{{ ms.dxy.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">DXY</div><div class="snap-value">--</div></div>{% endif %}
+
+              {% if ms.wti_crude %}
+              <div class="snap-item"><div class="snap-ticker">WTI Crude</div><div class="snap-value">{{ ms.wti_crude.value }}</div><div class="snap-delta {{ ms.wti_crude.direction }}">{{ ms.wti_crude.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">WTI Crude</div><div class="snap-value">--</div></div>{% endif %}
+
+              {% if ms.brent %}
+              <div class="snap-item"><div class="snap-ticker">Brent</div><div class="snap-value">{{ ms.brent.value }}</div><div class="snap-delta {{ ms.brent.direction }}">{{ ms.brent.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">Brent</div><div class="snap-value">--</div></div>{% endif %}
+
+              {% if ms.gold %}
+              <div class="snap-item"><div class="snap-ticker">Gold</div><div class="snap-value">{{ ms.gold.value }}</div><div class="snap-delta {{ ms.gold.direction }}">{{ ms.gold.change }}</div></div>
+              {% else %}<div class="snap-item"><div class="snap-ticker">Gold</div><div class="snap-value">--</div></div>{% endif %}
+            {% else %}
+              <div style="grid-column:1/4;text-align:center;padding:20px;color:var(--muted);font-style:italic">No market snapshot data available</div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% assign scenario_data = site.data.scenarios %}
+        {% if scenario_data and scenario_data.branches and scenario_data.branches.size > 0 %}
+        <div class="card">
+          <div class="card-header">Scenario Tree{% if scenario_data.title %} · <span class="accent">{{ scenario_data.title }}</span>{% endif %}</div>
+          {% for branch in scenario_data.branches %}
+            {% if branch.severity == "red" %}{% assign sev_emoji = "🔴" %}
+            {% elsif branch.severity == "yellow" %}{% assign sev_emoji = "🟡" %}
+            {% elsif branch.severity == "green" %}{% assign sev_emoji = "🟢" %}
+            {% else %}{% assign sev_emoji = "⚪" %}{% endif %}
+            <div class="scenario-node{% if forloop.first %} scenario-root{% endif %}">
+              <div class="scenario-label">{{ sev_emoji }} {{ branch.label }}</div>
+              <div class="scenario-prob">Probability: {{ branch.probability_pct }}%{% if branch.brent_projection %} · Brent → ${{ branch.brent_projection }}{% endif %}</div>
+              {% if branch.sub_branches and branch.sub_branches.size > 0 %}
+                {% for sub in branch.sub_branches %}
+                  {% if sub.severity == "red" %}{% assign sub_emoji = "🔴" %}
+                  {% elsif sub.severity == "yellow" %}{% assign sub_emoji = "🟡" %}
+                  {% elsif sub.severity == "green" %}{% assign sub_emoji = "🟢" %}
+                  {% else %}{% assign sub_emoji = "⚪" %}{% endif %}
+                  <div class="scenario-node scenario-sub">
+                    <div class="scenario-label">{{ sub_emoji }} {{ sub.label }}</div>
+                    <div class="scenario-prob">
+                      {% if sub.is_conditional %}Probability: {{ sub.probability_pct }}% of this branch
+                      {% else %}Probability: {{ sub.probability_pct }}%{% endif %}
+                      {% if sub.brent_projection %} · Brent → ${{ sub.brent_projection }}{% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
         {% else %}
-          {% capture label %}{{ short_time }} · Trading{% endcapture %}
+        <div class="card">
+          <div class="card-header">Scenario Tree</div>
+          <div class="scenario-empty"><div class="scenario-empty-icon">🌳</div><div>No active scenarios — check back during trading hours</div></div>
+        </div>
         {% endif %}
-        <button class="digest-pill{% if forloop.first %} active{% endif %}"
-                data-index="{{ forloop.index0 }}"
-                data-fulltime="{{ entry.time }}"
-                data-label="{{ label }}">
-          {{ short_time }}
-        </button>
-      {% endfor %}
+      </div>
+
     </div>
+  </div>
 
-    <!-- 📋 Digest Panels -->
-    {% for entry in entries reversed %}
-    <div class="digest-panel{% if forloop.first %} active{% endif %}"
-         data-index="{{ forloop.index0 }}"
-         data-time="{{ entry.time }}">
-      {% include digest-entry.html
-         time=entry.time
-         date=entry.date
-         trading=entry.post_market
-         canadian_markets=entry.canadian_markets
-         us_global_markets=entry.us_global_markets
-         prediction_markets=entry.prediction_markets
-         market_snapshot=entry.market_snapshot
-         analysis=entry.analysis
-         scenarios=entry.scenarios
-      %}
+  <div class="panel" id="panel-stories">
+    <div class="card"><div class="digest-empty">Stories tab — wired by separate task (t_03e6836f)</div></div>
+  </div>
+
+  <div class="panel" id="panel-archive">
+    <div class="card"><div class="digest-empty">Archive tab — wired by separate task (t_03b0eed8)</div></div>
+  </div>
+
+{% else %}
+  <div class="panel active" id="panel-today">
+    <div class="today-grid" style="grid-template-columns:1fr">
+      <div class="card" style="text-align:center;padding:60px 20px">
+        <div style="font-size:48px;margin-bottom:16px">🏛️</div>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px;color:var(--fg)">Waiting for markets to open...</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7">
+          Digests are generated during trading hours (Mon–Fri, 9 AM – 4 PM EDT).<br>
+          Check back soon!
+        </div>
+      </div>
     </div>
-    {% endfor %}
+  </div>
+{% endif %}
 
-    <script>
-      (function() {
-        var pills = document.querySelectorAll('.digest-pill');
-        var panels = document.querySelectorAll('.digest-panel');
-        var heroDate = document.getElementById('heroDate');
-        var heroMeta = document.getElementById('heroMeta');
+</div>
 
-        function switchDigest(index) {
-          // Update pills
-          pills.forEach(function(p) { p.classList.remove('active'); });
-          pills[index].classList.add('active');
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT: Tab nav + Theme toggle + Time selector
+     ═══════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
 
-          // Update panels
-          panels.forEach(function(p) { p.classList.remove('active'); });
-          panels[index].classList.add('active');
+  // ── INJECT ALL DIGEST DATA as JSON blob ──
+  var ALL_DIGESTS = {};
+  {% for entry in entries %}
+    {% comment %} Compute 24-hour from time string like "2:01 PM EDT" {% endcomment %}
+    {% assign eh = entry.time | slice: 0 | plus: 0 %}
+    {% if entry.time contains "PM" and eh != 1 %}
+      {% assign h24 = eh | plus: 12 %}
+    {% elsif entry.time contains "AM" and eh == 1 %}
+      {% assign h24 = 0 %}
+    {% else %}
+      {% assign h24 = eh %}
+    {% endif %}
+    ALL_DIGESTS[{{ h24 }}] = {{ entry | jsonify }};
+  {% endfor %}
 
-          // Update hero info
-          var pill = pills[index];
-          var panel = panels[index];
-          var fullTime = pill.getAttribute('data-fulltime');
-          var label = pill.getAttribute('data-label');
+  // ── TAB SWITCHING ──
+  var tabs = document.querySelectorAll('.tab');
+  var panels = document.querySelectorAll('.panel');
 
-          // Fade-swap the hero meta
-          heroMeta.style.opacity = '0';
-          heroMeta.style.transition = 'opacity 0.15s ease';
-          setTimeout(function() {
-            heroMeta.textContent = fullTime + ' · ' + label + ' · Hourly snapshot';
-            heroMeta.style.opacity = '1';
-          }, 150);
-        }
+  function switchTab(id) {
+    tabs.forEach(function(t) { t.classList.remove('active'); });
+    panels.forEach(function(p) { p.classList.remove('active'); });
+    var tab = document.querySelector('.tab[data-panel="' + id + '"]');
+    var panel = document.getElementById('panel-' + id);
+    if (tab) tab.classList.add('active');
+    if (panel) panel.classList.add('active');
+    try { localStorage.setItem('marketpulse-tab', id); } catch(e) {}
+  }
 
-        // Click handlers
-        pills.forEach(function(pill) {
-          pill.addEventListener('click', function() {
-            switchDigest(parseInt(this.getAttribute('data-index')));
-          });
-        });
+  tabs.forEach(function(t) {
+    t.addEventListener('click', function() { switchTab(t.dataset.panel); });
+  });
 
-        // Keyboard navigation: left/right arrows
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-            // Only if not typing in an input
-            if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  try { var st = localStorage.getItem('marketpulse-tab'); if (st) switchTab(st); } catch(e) {}
 
-            var active = document.querySelector('.digest-pill.active');
-            if (!active) return;
-            var current = parseInt(active.getAttribute('data-index'));
-            var next = e.key === 'ArrowRight' ? Math.min(current + 1, pills.length - 1) : Math.max(current - 1, 0);
-            if (next !== current) switchDigest(next);
-          }
-        });
-      })();
-    </script>
+  // ── THEME TOGGLE ──
+  var tt = document.getElementById('themeToggle');
+  if (tt) {
+    tt.addEventListener('click', function() {
+      var h = document.documentElement;
+      var n = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      h.setAttribute('data-theme', n);
+      try { localStorage.setItem('marketpulse-theme', n); } catch(e) {}
+    });
+  }
 
-  {% else %}
-    <div class="empty-state">
-      <h2>No digest data yet 📭</h2>
-      <p style="color: var(--text-secondary);">Digests will appear here once the first trading-hours digest is generated (Mon–Fri, 9 AM–4 PM EDT).</p>
-      <p style="margin-top: 1rem; color: var(--text-muted); font-size: 13px;">Check the <a href="{{ '/archive/' | relative_url }}" style="color: var(--accent);">Archive</a> for past digests.</p>
-    </div>
-  {% endif %}
-</main>
+  // ── TIME SELECTOR ──
+  var slots = document.querySelectorAll('.time-slot');
+  var digestC = document.getElementById('digestContainer');
+  var analysisC = document.getElementById('analysisContent');
+  var analysisT = document.getElementById('analysisTime');
+  var snapshotT = document.getElementById('snapshotTime');
+  var oddsC = document.getElementById('oddsContainer');
+
+  var availHours = Object.keys(ALL_DIGESTS).map(Number);
+  var latestH = availHours.length ? Math.max.apply(null, availHours) : null;
+
+  // Mark no-data slots
+  slots.forEach(function(s) {
+    var h = parseInt(s.getAttribute('data-hour'));
+    if (availHours.indexOf(h) === -1) s.classList.add('no-data');
+  });
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderDigest(hour) {
+    var d = ALL_DIGESTS[hour];
+    if (!d) {
+      digestC.innerHTML = '<div class="digest-empty">No digest available for this hour</div>';
+      return;
+    }
+    var t = (d.time || '').replace(/ EDT| EST/g,'');
+    var shortT = t.length > 5 ? t.substring(0,5) : t;
+
+    // Digest items
+    var items = (d.canadian_markets || []).concat(d.us_global_markets || []);
+    if (items.length) {
+      var htm = '';
+      items.forEach(function(it) {
+        var ttag = (it.tags && it.tags.length) ? '<span class="digest-tag pill-muted">' + esc(it.tags[0]) + '</span>' : '';
+        htm += '<div class="digest-item">' +
+          '<span class="digest-time">' + esc(shortT) + '</span>' +
+          '<span class="digest-headline">' +
+            (it.url ? '<a href="' + esc(it.url) + '" target="_blank" rel="noopener">' + esc(it.title) + '</a>' : esc(it.title)) +
+            (it.source ? '<span style="color:var(--muted);font-size:11px;display:block;margin-top:2px">' + esc(it.source) + (it.date ? ' · ' + esc(it.date) : '') + '</span>' : '') +
+          '</span>' + ttag +
+        '</div>';
+      });
+      digestC.innerHTML = htm;
+    } else {
+      digestC.innerHTML = '<div class="digest-empty">No stories available for this hour</div>';
+    }
+
+    // Analysis
+    var ana = d.analysis;
+    if (ana && (ana.theme || ana.cad_angle || ana.risk_factor || ana.polymarket_signal)) {
+      var ah = '';
+      if (ana.theme) ah += '<p><strong>Dominant narrative:</strong> ' + esc(ana.theme) + '</p>';
+      if (ana.cad_angle) ah += '<p style="margin-top:8px"><strong>Canadian angle:</strong> ' + esc(ana.cad_angle) + '</p>';
+      if (ana.risk_factor) ah += '<p style="margin-top:8px"><strong>Risk factor:</strong> ' + esc(ana.risk_factor) + '</p>';
+      if (ana.polymarket_signal) ah += '<p style="margin-top:8px"><strong>Polymarket signal:</strong> ' + esc(ana.polymarket_signal) + '</p>';
+      analysisC.innerHTML = ah;
+    } else {
+      analysisC.innerHTML = '<p><em>No analysis available for this time slot.</em></p>';
+    }
+    analysisT.textContent = t + ' snapshot';
+
+    // Polymarket odds
+    var pm = d.prediction_markets;
+    if (pm && pm.length) {
+      var ph = '';
+      pm.forEach(function(m) {
+        var pn = parseFloat(m.yes_pct) || 0;
+        var dc = m.delta ? (m.delta.indexOf('+') !== -1 ? ' up' : m.delta.indexOf('-') !== -1 ? ' down' : '') : '';
+        ph += '<div class="odds-row">' +
+          '<span class="odds-label">' + esc(m.market) + '</span>' +
+          '<div class="odds-bar-bg"><div class="odds-bar-fg" style="width:' + pn + '%"></div></div>' +
+          '<span class="odds-pct">' + esc(m.yes_pct) + '</span>' +
+          (m.delta ? '<span class="delta' + dc + '">' + esc(m.delta) + '</span>' : '') +
+        '</div>';
+      });
+      oddsC.innerHTML = ph;
+    } else {
+      oddsC.innerHTML = '<div class="digest-empty">No Polymarket data for this time slot</div>';
+    }
+
+    // Snapshot time label
+    if (snapshotT) snapshotT.textContent = t;
+  }
+
+  // Activate latest slot
+  if (latestH !== null) {
+    slots.forEach(function(s) { s.classList.remove('active'); });
+    var ds = document.querySelector('.time-slot[data-hour="' + latestH + '"]');
+    if (ds) { ds.classList.add('active'); renderDigest(latestH); }
+  }
+
+  // Click handlers
+  slots.forEach(function(s) {
+    s.addEventListener('click', function() {
+      if (s.classList.contains('no-data')) return;
+      slots.forEach(function(x) { x.classList.remove('active'); });
+      s.classList.add('active');
+      renderDigest(parseInt(s.getAttribute('data-hour')));
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
